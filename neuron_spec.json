@@ -1,0 +1,710 @@
+{
+  "spec": "Hub Neuron functionality spec",
+  "updated": "2026-11-02T11:16:10.748872Z",
+  "groups": [
+    {
+      "group": "Input & integration",
+      "items": [
+        {
+          "id": "1",
+          "name": "Receive signals",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Lines receive spikes into line pools.",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "2",
+          "name": "Sum inputs",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Charge hub sums what the pools pass in.",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "3",
+          "name": "Spatial summation",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Many pools feed one hub.",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "4",
+          "name": "Temporal summation",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Works because there is no leak (charge is kept).",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "23",
+          "name": "Dendritic computation",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Line pools keep inputs separate before the hub.",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "5",
+          "name": "Leak",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Rejected by R10; without it inhibition is required. Real charge leaks in ~10–20 ms.",
+          "todo": "No gradual leak. Coincidence window instead:\n- When the first charge arrives in an empty neuron, start a 20 ms timer.\n- If the hub reaches threshold before the timer ends → fire with carry-over (#27, D4): hub = hub − threshold, pools kept. Timer restarts.\n- If the timer ends without firing → dump all charge (hub and all line pools) to 0.\n- Timer does not restart on new inputs; it restarts only after a fire or a dump.\nInhibition (minus lines) is still needed for stability.",
+          "confirmed": true,
+          "prev_status": "missing"
+        }
+      ]
+    },
+    {
+      "group": "Firing & output",
+      "items": [
+        {
+          "id": "6",
+          "name": "Threshold firing",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Hub fires at ≥ 0.5.",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "7",
+          "name": "All-or-nothing spike",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Spike = 1, silent = 0.",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "8",
+          "name": "Reset after spike",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Via R16 dump (temporary rule).",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "9",
+          "name": "Refractory rest",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "After firing: can receive, cannot send. Rest length undecided (recommended 2 steps).",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "10",
+          "name": "Output",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Any free line acts as the axon.",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "12",
+          "name": "Fan-out",
+          "status": "done",
+          "original_status": "half",
+          "doc_note": "Undecided: fire on all lines (neuron) or one (router). Recommended: all.",
+          "todo": "all can fire together and receive together at the same time like parallel processing, cause each line have 2 sub lines in parallel which makes the neuron more fast",
+          "confirmed": true,
+          "prev_status": "half"
+        },
+        {
+          "id": "13",
+          "name": "Pass signal on",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Line → line between neurons.",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "27",
+          "name": "Bursts",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Several fast spikes in a row.",
+          "todo": "Bursts come from carry-over, not a special rule:\n- On fire: hub = hub − final threshold (F5), keeping the excess, instead of reset to 0.\n- After rest (2 ms), if hub is still ≥ final threshold → fire again.\n- Hub is capped at 1, so carry-over alone gives at most 2 quick spikes; longer bursts need more input arriving during rest.\n- The 20 ms coincidence window still dumps whatever is left.",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "32",
+          "name": "Spontaneous firing",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Firing with no input (noise / pacemaker).",
+          "todo": "Not needed for sensor/inner neurons in v1: inputs come from the senses.\nChanged for motor neurons: noise is ON (\"babbling\"), ~10 random spikes per second, at random moments, so the body moves and has something to learn from (otherwise motors never fire).\nPacemaker: off. Noise for other neurons: off.",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "group": "Synapses & transmission",
+      "items": [
+        {
+          "id": "14",
+          "name": "Excitation",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Plus lines add charge.",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "15",
+          "name": "Inhibition",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Minus lines. Needed because there is no leak.",
+          "todo": "Each neuron is either excitatory (+) or inhibitory (−), fixed at creation (Dale's law).\n- An inhibitory neuron's output lines have negative thickness: −0.1 to −1.\n- Delivered charge = spike × thickness, so a −0.4 line removes 0.4.\n- Minus charge goes straight to the hub, not into a line pool (real inhibitory synapses mostly sit on the cell body).\n- Hub can't go below 0 (floor at 0).\n- Inhibition doesn't restart the 20 ms window.\n- Network mix: ~80% excitatory, ~20% inhibitory.\nLearning (STDP) changes how strong a minus line is, but it stays minus.\nAll thickness limits (0.1 prune, 0.15 start, 0.3 permanent, 0.8 lock, max 1) use the size of the thickness, ignoring the sign: a −0.5 line counts as 0.5.",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "16",
+          "name": "Synapse strength",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Line thickness 0.1–1 (R15).",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "16b",
+          "name": "Weight math",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Delivered = spike × thickness (R15).",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "11",
+          "name": "Conduction delay",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Time for a spike to travel a line.",
+          "todo": "Every line has a delay in ms; the spike arrives at the receiver at send time + delay.\n- Default 2 ms for all lines (close to Shiu's fly model's 1.8 ms).\n- Minimum 1 ms (1 step), so no spike arrives in the same step it was sent.\n- Max 20 ms.\n- Delay is fixed per line (not learned) in v1.\n- Later, when neurons have positions: delay = line length × speed.\nBoth mini-lines of a line (in and out) use the same delay.",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "20",
+          "name": "Short-term fatigue / boost",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Synapse weakens or strengthens briefly after use.",
+          "todo": "Each line has a short-term \"energy\" value, 0–1, starting at 1.\n- Delivered charge = spike × thickness × energy.\n- Each spike on the line: energy = energy × 0.7.\n- Energy recovers back toward 1 over ~200 ms (computed from time since last spike, so sleeping lines cost nothing).\n- Doesn't change thickness; STDP still learns from the real spike timing.\nBoost (facilitation): not in v1.",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "33",
+          "name": "Gap junctions",
+          "status": "done",
+          "original_status": "half",
+          "doc_note": "Two-way lines are similar, but real ones pass both ways at once.",
+          "todo": "Each line is now 2 mini-lines in 1: one carries input, the other carries output, so a line can receive and send at the same time. This makes the neuron more powerful.\n- Each mini-line is one-way (A→B or B→A), with its own thickness, energy (#20) and STDP (#19).\n- Both share the line's delay (#11).\nThis is not a true gap junction (no direct charge evening-out between neurons); real gap junctions are skipped in v1.",
+          "confirmed": true,
+          "prev_status": "half"
+        }
+      ]
+    },
+    {
+      "group": "Learning & plasticity",
+      "items": [
+        {
+          "id": "17",
+          "name": "LTP",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Strengthen useful lines.",
+          "todo": "thicker per success +0.01, max thickness 1., reward signal is needed but i will add it later",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "18",
+          "name": "LTD",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Weaken useless lines.",
+          "todo": "Thinner per bad timing: up to −0.012 (via STDP, #19).\nMinimum to stay connected: 0.1. Below 0.1 → line is pruned, except a neuron's last 2 lines (#22): those stop at 0.1 instead.",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "19",
+          "name": "STDP",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Spike-order learning: before → stronger, after → weaker.",
+          "todo": "STDP compares, for each input line, when its spike ARRIVED (send time + 2 ms delay, #11)\nwith when the receiving neuron fired. Uses exact ms timestamps (#26).\n- Arrived before the receiver fired, within 20 ms (same as the leak window, #5) → LTP: + up to 0.01 (#17).\n- Arrived after the receiver fired, within 20 ms → LTD: − up to 0.012 (#18).\n- Closer in time = bigger change: full size at 0 ms gap, fading to 0 at 20 ms.\n- More than 20 ms apart → no change.\n- Every spike in a burst counts (#27), so bursts strengthen lines more.\n- Fatigue energy (#20) does not affect learning; STDP uses real spike timing only.\n- Minus lines (#15): STDP changes their strength, sign never flips.\n- Limits: max thickness 1 (#17); below 0.1 → line is pruned (#18).\n- A trial line becomes permanent when STDP pushes it past 0.3 (#21).\n- Changes go through Cfuel speed-up and the pending × Lfuel step (#29, #30).",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "24",
+          "name": "Back-propagating spike",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Learning signal sent back into the lines when the hub fires.",
+          "todo": "No separate backward signal. When a neuron fires, it stamps its fire time (exact ms, #26).\nEach input mini-line reads that stamp and compares it with its own last arrival time; that comparison is STDP (#19).\nCost: one timestamp per neuron, nothing travels back.",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "29",
+          "name": "Neuromodulation",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Dopamine etc. change how the network behaves. Doc says fine to skip.",
+          "todo": "Cfuel (curiosity fuel, noradrenaline/acetylcholine underneath): learn faster from new things.\n- One Cfuel value per neuron (not global): each neuron measures novelty on its own input lines.\n- Novelty detection: fatigue energy (#20) already shows what's new. A line firing with energy near 1 = input it hasn't seen recently.\n- Novelty score each 10 ms = average energy of the input mini-lines that fired. Old, repeated input → low; new input → high.\n- Cfuel rises toward the novelty score and fades back to 0 over ~1 s.\n- Range 0 to 1.\n- Effect: STDP change × (1 + Cfuel). Fully new input learns up to 2× faster.\n- Lfuel still decides good or bad; Cfuel only decides how fast.\nv1: on (it needs no sensors, only #20).",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "30",
+          "name": "Reward learning",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Third factor (reward) gates learning.",
+          "todo": "Reward = Lfuel (dopamine underneath, #29). Built in now, neutral until sensors exist:\n- STDP (#19) doesn't change thickness directly; it adds its change × (1 + Cfuel, #29) to a \"pending\" value on the mini-line.\n- Pending fades to 0 over 1 s (1000 ms).\n- Lfuel (−1 to 1) applies it: thickness += pending × Lfuel. Positive = learn it, negative = unlearn it.\n- v1 (no sensors yet): Lfuel fixed at 1, so STDP acts immediately, as in #19.\nLater Lfuel comes from sensors or a task score (#17).\nProposed change (tested): now that the body gives rewards, resting Lfuel = 0, so timing learning only sticks when a reward arrives (three-factor rule). Word lessons: 64% correct vs 53% without reward (15+15 brains, 90 brain-minutes). With resting Lfuel = 1 nothing was learned (50%).",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "group": "Growth & structure",
+      "items": [
+        {
+          "id": "21",
+          "name": "Grow connections",
+          "status": "done",
+          "original_status": "half",
+          "doc_note": "R14 gives the mechanism; no trigger rule yet.",
+          "todo": "Two triggers:\n1. Starvation: if the hub has not fired for 1000 ms (and is below its target rate, #31), grow 1 new input line from a random nearby neuron, thickness 0.15.\n2. Hebbian: if two unconnected neurons that are among each other's 50 nearest (F7) fire within 3 ms of each other 5+ times in the last 1 s, grow a line between them (thickness 0.15, sender = the one that fired first; only that direction's mini-line is active, D8).\nNew lines are \"trial\" lines. A trial line becomes permanent if STDP thickens it past 0.3 within 500 ms; otherwise remove it (#22).\nLimit: max 8 lines per neuron.",
+          "confirmed": true,
+          "prev_status": "half"
+        },
+        {
+          "id": "22",
+          "name": "Pruning",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Remove unused lines.",
+          "todo": "A mini-line is removed when:\n1. Its thickness drops below 0.1 (#18).\n2. It is a trial line that didn't pass 0.3 within 500 ms (#21).\n3. It carried no spike for 10 s (10,000 ms) and is thinner than 0.3.\nNever prune below 2 lines per neuron (R14 basic neuron has 2); those last 2 lines stop at 0.1 instead of being removed.\nAfter removal the neuron's space re-divides evenly (R14).",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "31",
+          "name": "Homeostasis",
+          "status": "done",
+          "original_status": "half",
+          "doc_note": "Even space split normalises inputs.",
+          "todo": "Each neuron has a target firing rate of 2 spikes per second (1 per 500 ms), measured as an average over the last 5 s.\n- Fires too little → lower its threshold by 0.001 per check (min 0.3); starvation growth (#21) is only allowed while below target.\n- Fires too much → raise its threshold by 0.001 per check (max 0.8) and thin all its input mini-lines a little (× 0.99).\n- Check once every 100 ms. Changes are slow so they don't fight learning.",
+          "confirmed": true,
+          "prev_status": "half"
+        },
+        {
+          "id": "37",
+          "name": "Neurogenesis (new neurons) and neuron death",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Grow new neurons where needed; remove dead ones.",
+          "todo": "Built this way (please check):\n- The brain space has more spots than neurons (default 1000 spots, 900 neurons at start).\n- Checked once a second: a glia region grows 1 new neuron when 3+ of its neurons are starving (below the target rate, #31) while already full (8 lines), and it has a free spot. At most once per 10 s per region.\n- The new neuron is + or − like the rest (80% / 20%) and gets 2 input lines from the busiest nearby neurons that still have room (R14), thickness 0.5.\n- A neuron with no lines left and no spike for 60 s (and at least 60 s old) dies; its spot becomes free.\n- Sensors and motor neurons never die.\nSeen so far: ~7 new neurons per minute in the robot brain, none died.",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "group": "Coding & network behaviour",
+      "items": [
+        {
+          "id": "25",
+          "name": "Rate coding",
+          "status": "done",
+          "original_status": "done",
+          "doc_note": "Emerges when running.",
+          "todo": "",
+          "confirmed": false
+        },
+        {
+          "id": "26",
+          "name": "Timing coding",
+          "status": "done",
+          "original_status": "half",
+          "doc_note": "Needs a clock / time steps.",
+          "todo": "Each neuron has its own clock state:\n- 0 = asleep: no input, nothing to compute, costs nothing.\n- Wakes instantly when a spike arrives.\n- While active it ticks (0.01–1 ms; smaller = more precise when busy).\n- Goes back to sleep when its pools and hub are empty and it isn't resting.\nEvery spike carries an exact timestamp (Ms), so neurons with different tick speeds still agree on order.",
+          "confirmed": true,
+          "prev_status": "half"
+        },
+        {
+          "id": "28",
+          "name": "Oscillations / rhythms",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "Network-level rhythms.",
+          "todo": "Not coded directly. Rhythms should emerge from + and − neurons (#15), delays (#11) and fatigue (#20).\nNo pacemakers in v1 (#32).\nTests measure them: count how many neurons fire each ms and look for a repeating pattern.",
+          "confirmed": true,
+          "prev_status": "missing"
+        }
+      ]
+    },
+    {
+      "group": "Optional (doc says fine to skip)",
+      "items": [
+        {
+          "id": "34",
+          "name": "Glia support cells",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "",
+          "todo": "Glia = a housekeeping helper, 1 per group of up to 50 neighbouring neurons. It never fires and carries no signals.\n- Astrocyte job (local calm): watches each neuron in its group. Only a neuron firing above target (#31) over the last 1 s gets its local Rfuel raised (D5, max 2); quiet neighbours are left alone. When the busy neuron calms down, its Rfuel eases back to 1. Sensors are outside input and are never calmed.\n- Microglia job (cleanup): runs the pruning checks (#22) and homeostasis checks (#31) for its group every 100 ms, so sleeping neurons (#26) don't have to wake up just to check themselves.\n- Supply job: refills its neurons' Efuel (#36).\n- Myelin job (later): lines used often get a shorter delay, down to the 1 ms minimum. Off in v1, because delay is fixed (#11).",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "35",
+          "name": "Gene-based permanent memory",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "",
+          "todo": "Locked lines = permanent memory (the \"gene switch\").\n- A mini-line locks when it stays at thickness ≥ 0.8 for 60 s (60,000 ms) while Lfuel (#30) is positive.\n- Locked: LTD is 10× weaker (up to −0.0012), it is never pruned (#22), and homeostasis thinning (#31) skips it. Cfuel (#29) only boosts LTP on it, not LTD.\n- At most half of a neuron's lines can be locked (max 4 of 8, #21), so it can always still learn.\n- Unlock: if Lfuel drops below −0.5 while the line is active (strong \"that was bad\").\nv1: on, but with Lfuel fixed at 1 any line that stays thick for 60 s locks.",
+          "confirmed": true,
+          "prev_status": "missing"
+        },
+        {
+          "id": "36",
+          "name": "Energy limits",
+          "status": "done",
+          "original_status": "missing",
+          "doc_note": "",
+          "todo": "Efuel = each neuron's energy (named like Lfuel / Rfuel / Cfuel; separate from line fatigue energy, #20).\n- Range 0 to 1, starts at 1.\n- Each spike costs 0.05. Receiving charge is free.\n- Refills toward 1 over 2 s, computed from elapsed time, so sleeping neurons cost nothing (#26). Glia (#34) do the refilling.\n- If Efuel is below 0.05, the neuron can't fire; its charge waits and the 20 ms window (#5) may dump it.\nAt the 2 spikes/s target (#31) this almost never matters. It's a last-resort brake against long bursts and runaway firing (D5).",
+          "confirmed": true,
+          "prev_status": "missing"
+        }
+      ]
+    },
+    {
+      "group": "Open decisions",
+      "items": [
+        {
+          "id": "D1",
+          "name": "Fan-out: all lines or one?",
+          "doc_note": "Recommended: all free lines.",
+          "todo": "All output lines fire together (#12). Each output mini-line delivers spike × its own thickness × its energy (#20).",
+          "confirmed": true
+        },
+        {
+          "id": "D2",
+          "name": "Tie-break when two lines send in the same step",
+          "doc_note": "Lower ID or random.",
+          "todo": "Not needed. Input and output are separate mini-lines (#33), so sending never blocks receiving.\nSpikes arriving in the same ms are all added together; order inside a ms doesn't matter because they just sum.",
+          "confirmed": true
+        },
+        {
+          "id": "D3",
+          "name": "Rest length (time steps)",
+          "doc_note": "Recommended: 2.",
+          "todo": "Rest = 2 ms after each spike.\nDuring rest the neuron still receives charge (R9) but can't fire.\nAfter rest, if hub ≥ threshold it fires again (this is how bursts happen, #27).",
+          "confirmed": true
+        },
+        {
+          "id": "D4",
+          "name": "Reset value after spike",
+          "doc_note": "Recommended: hub → 0.",
+          "todo": "Carry-over (#27): on fire, hub = hub − threshold (threshold is 0.5 unless homeostasis moved it, #31). Excess is kept.\nHub capped at 1. Line pools are not cleared on fire.\nThe 20 ms window (#5) dumps whatever is left if the neuron doesn't fire again.",
+          "confirmed": true
+        },
+        {
+          "id": "D5",
+          "name": "Leak or inhibition (or both)?",
+          "doc_note": "Recommended: small leak per step + minus lines.",
+          "todo": "Both, plus more brakes:\n1. 20 ms coincidence window dump (#5) instead of smooth leak.\n2. Inhibition, minus lines, ~20% of neurons (#15).\n3. Fatigue on each mini-line (#20).\n4. Homeostasis threshold adjustment (#31).\n5. Rfuel (serotonin underneath): threshold × Rfuel, range 0.5–2. v1 = 1 (no effect); later from sensors / task.\nTune one at a time if the network goes silent.",
+          "confirmed": true
+        },
+        {
+          "id": "D6",
+          "name": "When does a neuron grow a new line?",
+          "doc_note": "See 03_learning_and_growth.md.",
+          "todo": "As in #21: starvation (no fire for 1000 ms, only while below target rate (#31)) and Hebbian (two of the 50 nearest neurons fire within 3 ms of each other 5+ times in 1 s).\nNew lines start at 0.15 as trial lines, max 8 lines per neuron.",
+          "confirmed": true
+        },
+        {
+          "id": "D7",
+          "name": "Learning rule for thickness",
+          "doc_note": "Recommended: STDP.",
+          "todo": "STDP (#19): 20 ms window, closer timing = bigger change.\n- Thicker: up to +0.01 (#17). Thinner: up to −0.012 (#18).\n- Speed boosted by Cfuel: change × (1 + Cfuel) for new input (#29).\n- Applied through the pending value × Lfuel (#30); Lfuel fixed at 1 in v1.",
+          "confirmed": true
+        },
+        {
+          "id": "D8",
+          "name": "One-way or two-way lines?",
+          "doc_note": "Recommended: one-way (matches FlyWire).",
+          "todo": "Each line holds 2 one-way mini-lines (#33): one A→B, one B→A.\n- Each mini-line has its own thickness, energy and STDP; both share the line's delay (#11).\n- Sign comes from the sending neuron (#15): A's mini-line is + or − by A's type.\n- A newly grown line only activates the direction that triggered it (#21). The reverse mini-line starts at 0 (= not connected, R15) until a growth trigger fires that way.",
+          "confirmed": true
+        }
+      ]
+    },
+    {
+      "group": "Flaws to fix",
+      "items": [
+        {
+          "id": "F1",
+          "name": "R4 vs R14: pools can never reach 0.5",
+          "doc_note": "With 3+ lines each pool holds ≤ 1/3. Fix: pass when full, or scale threshold with line count.",
+          "todo": "Fix: a pool passes charge when it is FULL, not at 0.5.\n- Pool capacity = 1 / number of lines (2 lines → 0.5, same as old R4; 4 lines → 0.25).\n- Arriving charge fills the pool; each time it reaches capacity, that amount moves to the hub. The remainder waits in the pool.\n- Minus charge skips pools and goes straight to the hub (#15).\n- The 20 ms window (#5) dumps pools too.",
+          "confirmed": true
+        },
+        {
+          "id": "F2",
+          "name": "No leak + no inhibition → runaway firing",
+          "doc_note": "Charge creeps to 0.5 everywhere.",
+          "todo": "Handled by the four brakes in D5.\nTest: feed random input and check that fewer than ~20% of neurons fire in any 1 ms. If it's higher, raise inhibition first.",
+          "confirmed": true
+        },
+        {
+          "id": "F3",
+          "name": "Two-way lines add complexity",
+          "doc_note": "No proven benefit; real chemical synapses are one-way.",
+          "todo": "Solved: lines are 2 one-way mini-lines (#33, D8), so there are no send/receive conflicts.",
+          "confirmed": true
+        },
+        {
+          "id": "F4",
+          "name": "R16 dump is temporary",
+          "doc_note": "Decide what happens to leftover charge.",
+          "todo": "Replaced: no dump after firing. Carry-over (D4, #27) keeps the excess; the 20 ms window (#5) clears what's left.",
+          "confirmed": true
+        },
+        {
+          "id": "F5",
+          "name": "Threshold can rise above the hub cap",
+          "doc_note": "Homeostasis max 0.8 × Rfuel max 2 = 1.6, but the hub caps at 1.",
+          "todo": "Final threshold = homeostasis threshold (#31, 0.3–0.8) × Rfuel (D5, 0.5–2), then clamped to 0.15–0.95.\n- Max 0.95 keeps it below the hub cap of 1 (D4), so a neuron can always fire.\n- Min 0.15 stops a calm-free, starved neuron firing from almost nothing.\nCarry-over (D4, #27) subtracts this final threshold.",
+          "confirmed": true
+        },
+        {
+          "id": "F6",
+          "name": "No rule for picking tick speed",
+          "doc_note": "#26 allows 0.01–1 ms ticks but never says which.",
+          "todo": "v1: one active tick speed of 1 ms, plus sleep (#26).\n- Awake neurons tick every 1 ms; sleeping neurons don't tick at all.\n- Spike times are still exact ms timestamps (#26), so STDP stays accurate.\n- Variable speed (0.01–1 ms) comes later, only if tests show 1 ms is too coarse.",
+          "confirmed": true
+        },
+        {
+          "id": "F7",
+          "name": "\"Nearby neuron\" is undefined",
+          "doc_note": "Growth (#21) and glia groups (#34) need it; neurons have no positions yet.",
+          "todo": "The neuron doesn't care about brain shape. It only needs a position and a way to measure distance to other neurons.\nBrain shape is chosen by whoever builds the brain/creature (network spec), so a new brain can use any shape: square, cube, sphere, cone, or real FlyWire 3D positions.\nNeuron rules that use position:\n- Nearby = the 50 closest neurons by distance, in whatever shape the brain uses.\n- Starvation growth (#21) picks a random one of its 50 nearest.\n- Glia groups (#34): the brain space is split into regions of ~50 neurons; 1 glia per region.\n- Positions allow delay = length × speed later (#11).\nFirst test brain: 2D square, random positions.\nLater: compare shapes (same neuron count and density), then auto shape modification.",
+          "confirmed": true
+        },
+        {
+          "id": "F8",
+          "name": "Order of events inside a tick",
+          "doc_note": "Without a fixed order, results depend on which neuron updates first.",
+          "todo": "Every awake neuron, every 1 ms tick, in this order (all neurons do step 1 before any does step 2, and so on):\n1. Deliver spikes whose arrival time is this tick (#11): + charge into line pools, − charge straight to the hub (#15).\n2. Pools that reach capacity pass charge to the hub (F1).\n3. Check the 20 ms window (#5): if expired without a fire → dump.\n4. If not resting and Efuel ≥ 0.05 (#36) and hub ≥ final threshold (F5) → fire: send on all output mini-lines (D1), stamp the time (#24), carry-over (D4), start 2 ms rest (D3).\n5. Learning: STDP into pending (#19, #30), Cfuel / Lfuel applied (#29).\n6. Update rest counter; fatigue (#20) and Efuel (#36) are recalculated lazily from elapsed time.\n7. Sleep if hub and pools are empty and not resting (#26).\nGlia checks (pruning, homeostasis, #34) run every 100 ms after step 7.",
+          "confirmed": true
+        }
+      ]
+    },
+    {
+      "group": "SuperNeuron v2 proposals (built, waiting for you)",
+      "items": [
+        {
+          "id": "V1",
+          "name": "Small, slow leak instead of the 20 ms dump",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Hub, pools and mini-buckets lose charge with a 50 ms time constant every tick (applied before new input arrives). Nothing is wiped at once; the 20 ms dump (R16/#5) is off in v2. Param: leak_tau_ms = 50.",
+          "confirmed": false
+        },
+        {
+          "id": "V2",
+          "name": "Fire threshold 0.3",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Homeostasis threshold starts at 0.3 (was 0.5), may move between 0.15 and 0.9 so busy neurons can be calmed.",
+          "confirmed": false
+        },
+        {
+          "id": "V3",
+          "name": "No 8-line limit",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Up to 64 lines per neuron (max_lines = 64, memory sized from it). A neuron counts as 'full' for neurogenesis at 6 lines.",
+          "confirmed": false
+        },
+        {
+          "id": "V4",
+          "name": "Softer fatigue",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Each spike multiplies the line's energy by 0.8 (was 0.7), recovery time constant 30 ms (was 50).",
+          "confirmed": false
+        },
+        {
+          "id": "V5",
+          "name": "Gentle homeostasis",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Busy neurons' inputs thin x0.998 per check (-2%/s, was -10%/s); threshold steps 0.001 per check. Tested: removing thinning completely made the brain run away (every layer ~38 Hz), so a gentle version stays.",
+          "confirmed": false
+        },
+        {
+          "id": "V6",
+          "name": "Glia calm only fast neurons",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Astrocytes raise local Rfuel only for neurons above 10 Hz (was: above the 2 Hz target). Tested: 50 Hz was too late.",
+          "confirmed": false
+        },
+        {
+          "id": "V7",
+          "name": "Each neuron its own target rate",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Per-neuron target (S.target). In the bee brain: Kenyon cells 1 Hz, MBONs 5 Hz, the rest 2 Hz.",
+          "confirmed": false
+        },
+        {
+          "id": "V8",
+          "name": "Prune only weak lines",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "A line is no longer removed for being quiet; only lines learning made thinner than 0.1, or failed trial lines. Pruning checks a rotating 1/10 slice of the lines each time (speed).",
+          "confirmed": false
+        },
+        {
+          "id": "V9",
+          "name": "Trial lines get 3 s",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "A newly grown trial line has 3 s (was 0.5 s) to reach 0.3 before it is removed.",
+          "confirmed": false
+        },
+        {
+          "id": "V10",
+          "name": "Room to grow neurons",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Brains get free spots (bee: 40) so neurogenesis (#37) can actually add neurons.",
+          "confirmed": false
+        },
+        {
+          "id": "V11",
+          "name": "Mini-buckets in the bucket (dendrites)",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Each neuron has 4 mini-buckets. Excitatory lines fill their mini-bucket; once it holds 0.25 it pours its charge x1.5 into the hub (dendritic spike). Inhibitory charge still goes straight to the hub.",
+          "confirmed": false
+        },
+        {
+          "id": "V12",
+          "name": "Choke rule",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "A mini-bucket filled past 0.9 in one go chokes: it empties without pouring. One neuron can solve XOR (A alone fires, B alone fires, A+B together stays silent). Tested in tests/test_v2.py; LIF and ALIF cannot.",
+          "confirmed": false
+        },
+        {
+          "id": "V13",
+          "name": "Smart growth",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "A new input line joins the mini-bucket holding the most charge when it is made, so inputs active together end up in the same mini-bucket.",
+          "confirmed": false
+        },
+        {
+          "id": "V14",
+          "name": "Branch credit",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Timing learning (LTP) for an excitatory input only counts if its mini-bucket poured within the last 20 ms (it helped cause the spike).",
+          "confirmed": false
+        },
+        {
+          "id": "V15",
+          "name": "Lock on reward",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "A line strengthened by a reward is safe from pruning for 5 minutes.",
+          "confirmed": false
+        },
+        {
+          "id": "V16",
+          "name": "Grow by teamwork, as needed",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "A starving neuron takes a new line from a neuron that fired in the last 50 ms (any layer). Hebbian growth only happens while a neuron fires below 2x its target rate. Tested: without that limit growth fed itself and ran away.",
+          "confirmed": false
+        },
+        {
+          "id": "V17",
+          "name": "Two-speed learning memory (shared rule)",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Eligibility has a fast memory (250 ms) and a slow one (2 s); a reward uses both. Given to every bee in the test.",
+          "confirmed": false
+        },
+        {
+          "id": "V18",
+          "name": "Reward surprise (shared rule)",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "Learning uses reward minus the expected reward (running average), x4. Given to every bee in the test.",
+          "confirmed": false
+        },
+        {
+          "id": "V19",
+          "name": "Faster rewards",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "A reward only visits lines that have eligibility (a kept list), not every line in the brain. Same result, less work.",
+          "confirmed": false
+        },
+        {
+          "id": "V20",
+          "name": "Reward-guided growth (structural learning)",
+          "status": "missing",
+          "original_status": "missing",
+          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "todo": "When a reward arrives (surprise x gain >= 0.2), up to 4 neurons that fired in the last 300 ms each grow a trial line (start 0.2) from a neuron that fired 2-20 ms before them (their likely cause). Trial lines must reach 0.3 within 3 s or they are removed. Research 2026-11-02: v2 went from 2.9 to 11.1 squares and became the only bee that learns to steer; ahead of LIF and ALIF in all 18 tests. ALIF given the same rule only went 3.2 -> 3.8.",
+          "confirmed": false
+        }
+      ]
+    }
+  ]
+}

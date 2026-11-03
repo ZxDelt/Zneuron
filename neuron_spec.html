@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neuron Spec</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6a64; --line: #e2e0d8;
+    --accent: #2f5bd3; --done: #1f8a4c; --half: #b7791f; --missing: #c0392b; --skip: #8a8a8a;
+    --prio: #fff3d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151514; --panel: #1f1f1d; --ink: #ecebe6; --muted: #9a998f; --line: #33322e;
+      --accent: #7a9cff; --done: #4cc782; --half: #e0a84a; --missing: #ef6b5b; --skip: #8a8a8a;
+      --prio: #3a3220;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg);
+    border-bottom: 1px solid var(--line); padding: 12px 16px; }
+  .bar { max-width: 960px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  h1 { font-size: 18px; margin: 0 auto 0 0; }
+  .stats { font-size: 13px; color: var(--muted); }
+  .stats b { color: var(--ink); }
+  button, select { font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #saveState { font-size: 12px; color: var(--muted); min-width: 110px; }
+  main { max-width: 960px; margin: 0 auto; padding: 16px; }
+  .intro { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+  section { margin-bottom: 28px; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
+    margin: 0 0 10px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  .item { background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 14px; margin-bottom: 10px; }
+  .item.prio { background: linear-gradient(var(--prio), var(--prio)) left/4px 100% no-repeat, var(--panel); }
+  .head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .num { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; min-width: 28px; }
+  .name { font-weight: 600; flex: 1; }
+  .tag { font-size: 11px; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); }
+  .head select { padding: 3px 6px; font-weight: 600; }
+  select.s-done { color: var(--done); } select.s-half { color: var(--half); }
+  select.s-missing { color: var(--missing); } select.s-skip { color: var(--skip); }
+  .doc { font-size: 13px; color: var(--muted); margin: 4px 0 8px 38px; }
+  textarea { width: 100%; min-height: 54px; resize: vertical; font: inherit; font-size: 14px;
+    padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--ink); }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .hidden { display: none; }
+  .actions { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+  .actions button[disabled] { opacity: .45; cursor: default; }
+  .ok { color: var(--done); font-size: 13px; font-weight: 600; }
+  .item.confirmed { border-color: var(--done); }
+  .item.confirmed textarea { opacity: .75; }
+  details.explain { margin: 0 0 10px 38px; font-size: 14px; }
+  details.explain summary { cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 600; }
+  details.explain dl { margin: 6px 0 0; display: grid; grid-template-columns: 150px 1fr; gap: 4px 12px; }
+  details.explain dt { color: var(--muted); font-size: 13px; }
+  details.explain dd { margin: 0; }
+  details.explain ul { margin: 0; padding-left: 18px; }
+  @media (max-width: 600px) {
+    details.explain { margin-left: 0; }
+    details.explain dl { grid-template-columns: 1fr; }
+    details.explain dd { margin-bottom: 6px; }
+  }
+  details.does { margin: 0 0 0 38px; font-size: 14px; }
+  details.does summary { cursor: pointer; color: var(--done); font-size: 13px; font-weight: 600; }
+  details.does p { margin: 6px 0 8px; }
+  details.does p.spec { white-space: pre-wrap; }
+  details.does textarea { margin-top: 4px; }
+  @media (max-width: 600px) { details.does { margin-left: 0; } }
+  @media (max-width: 600px) { .doc { margin-left: 0; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Hub Neuron — Spec</h1>
+    <span class="stats" id="stats"></span>
+    <select id="filter" title="Filter">
+      <option value="all">Show all</option>
+      <option value="done">Done</option>
+      <option value="half">Half done</option>
+      <option value="missing">Missing</option>
+      <option value="skip">Skip</option>
+      <option value="todo">Has notes</option>
+      <option value="empty">No notes yet</option>
+      <option value="confirmed">Confirmed</option>
+      <option value="unconfirmed">Not confirmed</option>
+    </select>
+    <button id="openBtn" class="primary hidden">Link existing file</button>
+    <button id="createBtn" class="hidden">Create new file</button>
+    <button id="reconnectBtn" class="primary hidden">Reconnect</button>
+    <button id="unlinkBtn" class="hidden" title="Stop autosaving to this file">Unlink</button>
+    <button id="downloadBtn" class="primary hidden">Download JSON</button>
+    <span id="saveState"></span>
+  </div>
+</header>
+<main>
+  <p class="intro">Write under each point what the neuron should do. Link <code>neuron_spec.json</code> in the
+    SuperNeuron folder once: after that every edit autosaves to it and the page loads it on open
+    (Chrome may ask for one click to reconnect, or offer "Allow on every visit").
+    Highlighted items are the priority gaps (stability and learning).</p>
+  <div id="root"></div>
+</main>
+
+<script>
+const GROUPS = [
+  { id: 'input', title: 'Input & integration', items: [
+    ['1', 'Receive signals', 'done', 'Lines receive spikes into line pools.'],
+    ['2', 'Sum inputs', 'done', 'Charge hub sums what the pools pass in.'],
+    ['3', 'Spatial summation', 'done', 'Many pools feed one hub.'],
+    ['4', 'Temporal summation', 'done', 'Works because there is no leak (charge is kept).'],
+    ['23', 'Dendritic computation', 'done', 'Line pools keep inputs separate before the hub.'],
+    ['5', 'Leak', 'missing', 'Rejected by R10; without it inhibition is required. Real charge leaks in ~10–20 ms.', true],
+  ]},
+  { id: 'fire', title: 'Firing & output', items: [
+    ['6', 'Threshold firing', 'done', 'Hub fires at ≥ 0.5.'],
+    ['7', 'All-or-nothing spike', 'done', 'Spike = 1, silent = 0.'],
+    ['8', 'Reset after spike', 'done', 'Via R16 dump (temporary rule).'],
+    ['9', 'Refractory rest', 'done', 'After firing: can receive, cannot send. Rest length undecided (recommended 2 steps).'],
+    ['10', 'Output', 'done', 'Any free line acts as the axon.'],
+    ['12', 'Fan-out', 'half', 'Undecided: fire on all lines (neuron) or one (router). Recommended: all.'],
+    ['13', 'Pass signal on', 'done', 'Line → line between neurons.'],
+    ['27', 'Bursts', 'missing', 'Several fast spikes in a row.'],
+    ['32', 'Spontaneous firing', 'missing', 'Firing with no input (noise / pacemaker).'],
+  ]},
+  { id: 'syn', title: 'Synapses & transmission', items: [
+    ['14', 'Excitation', 'done', 'Plus lines add charge.'],
+    ['15', 'Inhibition', 'missing', 'Minus lines. Needed because there is no leak.', true],
+    ['16', 'Synapse strength', 'done', 'Line thickness 0.1–1 (R15).'],
+    ['16b', 'Weight math', 'done', 'Delivered = spike × thickness (R15).'],
+    ['11', 'Conduction delay', 'missing', 'Time for a spike to travel a line.'],
+    ['20', 'Short-term fatigue / boost', 'missing', 'Synapse weakens or strengthens briefly after use.'],
+    ['33', 'Gap junctions', 'half', 'Two-way lines are similar, but real ones pass both ways at once.'],
+  ]},
+  { id: 'learn', title: 'Learning & plasticity', items: [
+    ['17', 'LTP', 'missing', 'Strengthen useful lines.', true],
+    ['18', 'LTD', 'missing', 'Weaken useless lines.', true],
+    ['19', 'STDP', 'missing', 'Spike-order learning: before → stronger, after → weaker.', true],
+    ['24', 'Back-propagating spike', 'missing', 'Learning signal sent back into the lines when the hub fires.'],
+    ['29', 'Neuromodulation', 'missing', 'Dopamine etc. change how the network behaves. Doc says fine to skip.'],
+    ['30', 'Reward learning', 'missing', 'Third factor (reward) gates learning.'],
+  ]},
+  { id: 'grow', title: 'Growth & structure', items: [
+    ['21', 'Grow connections', 'half', 'R14 gives the mechanism; no trigger rule yet.'],
+    ['22', 'Pruning', 'missing', 'Remove unused lines.'],
+    ['31', 'Homeostasis', 'half', 'Even space split normalises inputs.'],
+    ['37', 'Neurogenesis (new neurons) and neuron death', 'missing', 'Grow new neurons where needed; remove dead ones.'],
+  ]},
+  { id: 'code', title: 'Coding & network behaviour', items: [
+    ['25', 'Rate coding', 'done', 'Emerges when running.'],
+    ['26', 'Timing coding', 'half', 'Needs a clock / time steps.'],
+    ['28', 'Oscillations / rhythms', 'missing', 'Network-level rhythms.'],
+  ]},
+  { id: 'opt', title: 'Optional (doc says fine to skip)', items: [
+    ['34', 'Glia support cells', 'missing', ''],
+    ['35', 'Gene-based permanent memory', 'missing', ''],
+    ['36', 'Energy limits', 'missing', ''],
+  ]},
+  { id: 'decide', title: 'Open decisions', kind: 'decision', items: [
+    ['D1', 'Fan-out: all lines or one?', '', 'Recommended: all free lines.'],
+    ['D2', 'Tie-break when two lines send in the same step', '', 'Lower ID or random.'],
+    ['D3', 'Rest length (time steps)', '', 'Recommended: 2.'],
+    ['D4', 'Reset value after spike', '', 'Recommended: hub → 0.'],
+    ['D5', 'Leak or inhibition (or both)?', '', 'Recommended: small leak per step + minus lines.'],
+    ['D6', 'When does a neuron grow a new line?', '', 'See 03_learning_and_growth.md.'],
+    ['D7', 'Learning rule for thickness', '', 'Recommended: STDP.'],
+    ['D8', 'One-way or two-way lines?', '', 'Recommended: one-way (matches FlyWire).'],
+  ]},
+  { id: 'flaws', title: 'Flaws to fix', kind: 'decision', items: [
+    ['F1', 'R4 vs R14: pools can never reach 0.5', '', 'With 3+ lines each pool holds ≤ 1/3. Fix: pass when full, or scale threshold with line count.', true],
+    ['F2', 'No leak + no inhibition → runaway firing', '', 'Charge creeps to 0.5 everywhere.', true],
+    ['F3', 'Two-way lines add complexity', '', 'No proven benefit; real chemical synapses are one-way.'],
+    ['F4', 'R16 dump is temporary', '', 'Decide what happens to leftover charge.'],
+    ['F5', 'Threshold can rise above the hub cap', '', 'Homeostasis max 0.8 × Rfuel max 2 = 1.6, but the hub caps at 1.', true],
+    ['F6', 'No rule for picking tick speed', '', '#26 allows 0.01–1 ms ticks but never says which.'],
+    ['F7', '"Nearby neuron" is undefined', '', 'Growth (#21) and glia groups (#34) need it; neurons have no positions yet.'],
+    ['F8', 'Order of events inside a tick', '', 'Without a fixed order, results depend on which neuron updates first.'],
+  ]},
+  { id: 'v2', title: 'SuperNeuron v2 proposals (built, waiting for you)', items: [
+    ['V1', "Small, slow leak instead of the 20 ms dump", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V2', "Fire threshold 0.3", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V3', "No 8-line limit", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V4', "Softer fatigue", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V5', "Gentle homeostasis", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V6', "Glia calm only fast neurons", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V7', "Each neuron its own target rate", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V8', "Prune only weak lines", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V9', "Trial lines get 3 s", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V10', "Room to grow neurons", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V11', "Mini-buckets in the bucket (dendrites)", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V12', "Choke rule", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V13', "Smart growth", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V14', "Branch credit", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V15', "Lock on reward", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V16', "Grow by teamwork, as needed", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V17', "Two-speed learning memory (shared rule)", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V18', "Reward surprise (shared rule)", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V19', "Faster rewards", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V20', "Reward-guided growth (structural learning)", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+  ]},
+];
+
+// What each done function does in the model (shown in the dropdown on done items)
+const DOES = {
+  '1': 'Each incoming mini-line drops arriving charge (spike × thickness × energy) into that line\'s own pool. Pool capacity = 1 ÷ number of lines (F1). Minus charge skips the pool and goes to the hub (#15).',
+  '2': 'Every step the hub adds up all charge the pools pass in. Hub charge stays in the 0–1 range.',
+  '3': 'Charge from several lines in the same step adds together in the hub, so many weak inputs can fire it together.',
+  '4': 'Charge adds up over time, but only inside the 20 ms window (#5): if the neuron doesn\'t fire within 20 ms of the first input, all charge is dumped.',
+  '23': 'Each line has its own pool, so inputs don\'t mix until a pool fills to its capacity (1 ÷ number of lines) and passes that charge to the hub (F1).',
+  '6': 'Each tick, if hub charge ≥ the final threshold (homeostasis threshold × Rfuel, kept between 0.15 and 0.95, F5), the neuron fires — unless it is resting or out of Efuel (#36).',
+  '7': 'A spike is always 1, however far over threshold the hub was. Strength comes only from line thickness.',
+  '8': 'Carry-over: after firing, hub = hub − final threshold, so the excess is kept (D4). Pools are not cleared; the 20 ms window (#5) dumps leftovers.',
+  '9': 'For 2 steps after firing (D3) the neuron still collects charge but cannot send.',
+  '10': 'The spike leaves on the outgoing lines (how many is set by Fan-out, #12).',
+  '13': 'A spike sent on a line arrives in the receiving neuron\'s line pool on the next step.',
+  '14': 'Lines with positive thickness add charge to the receiving neuron.',
+  '16': 'Each line has a thickness: 0 = no connection, 0.1–1 = thin to strongest. Thickness is the long-term memory.',
+  '16b': 'Charge delivered = spike × thickness. Example: a 0.3-thick line delivers 0.3.',
+  '25': 'More or stronger input makes a neuron fire more often; read out as spikes per N steps.',
+};
+
+// Plain-language help for every open item: [what it is, everyday example, why it matters here, questions to answer]
+const EXPLAIN = {
+  '5': ['Charge slowly drains out of a neuron when nothing new arrives.',
+    'A bucket with a small hole: fill it fast and it overflows (fires); fill it slowly and the water drains away first.',
+    'Without it, old charge stays forever, so inputs far apart in time still add up and fire the neuron. Current plan: no leak, but a 20 ms window that dumps the charge.',
+    ['Smooth leak, the 20 ms dump window, or both?', 'If a window: how long, and does it start at the first input?']],
+  '12': ['When a neuron fires, how many of its output lines carry the spike.',
+    'Shouting in a room (everyone hears) vs. whispering to one person.',
+    'All lines = how real neurons work. One line = a router, which changes the whole design.',
+    ['All lines or one?', 'If all: does each line deliver spike × its own thickness?']],
+  '27': ['A neuron fires 2–5 spikes very fast, then goes quiet.',
+    'Knocking once vs. banging on the door 4 times quickly — the banging gets noticed.',
+    'Bursts get through more reliably and trigger learning strongly. Your reset + dump rules currently allow only one spike.',
+    ['Keep extra charge after firing (bursts happen by themselves) or dump it (no bursts)?', 'Or skip for v1?']],
+  '32': ['A neuron fires with no input, from random noise or a built-in beat.',
+    'A phone that buzzes randomly now and then; a metronome ticking by itself.',
+    'Keeps neurons far from sensors active, so growth and learning can still reach them. Sensors will give most input later.',
+    ['Noise on or off by default?', 'How often (e.g. 1 random spike per second)?', 'Any pacemaker neurons with a steady beat?']],
+  '15': ['Lines that remove charge instead of adding it — the brain\'s brake.',
+    'A car with only an accelerator and no brake will crash.',
+    'Without it, activity only grows until everything fires at once (runaway firing).',
+    ['Is each neuron fully + or fully −, or can lines mix?', 'Does minus charge hit the hub or a line pool?', 'Can the hub go below 0?', 'What share of neurons are inhibitory (usually ~20%)?']],
+  '11': ['The time a spike takes to travel along a line.',
+    'Thunder after lightning: the farther away, the longer the gap.',
+    'Without delay a whole chain fires in the same step, so the model can\'t tell who fired first and STDP breaks.',
+    ['Default delay (fly brain ≈ 2 ms)?', 'Same for every line, or based on line length?', 'Minimum 1 ms?']],
+  '20': ['A line gets briefly weaker (tired) or stronger (warmed up) after use, then returns to normal.',
+    'Your arms after 20 push-ups: weaker for a while, then fine again.',
+    'Fatigue is an extra brake against runaway firing, and makes new inputs stand out over constant ones.',
+    ['Fatigue, boost, both or neither?', 'How much weaker per spike?', 'How long to recover (~200 ms)?']],
+  '33': ['A direct electrical link where charge flows both ways at the same moment, with no delay.',
+    'Two water tanks joined by a pipe: the levels even out.',
+    'They make neighbouring neurons fire in sync. Your idea of 2 mini-lines per line (one in, one out) is two one-way lines — useful, but not a true gap junction.',
+    ['Do you want real gap junctions (charge evens out between two neurons)?', 'Or are the 2 mini-lines enough?']],
+  '17': ['Long-term strengthening: a line that helps the receiver fire gets thicker, and stays thicker.',
+    'A path across grass: the more people walk it, the clearer it gets.',
+    'This is how the network stores memories. Without it, nothing is learned.',
+    ['How much thicker per success (e.g. +0.01)?', 'Maximum thickness 1?', 'Does it need a reward signal to stick?']],
+  '18': ['Long-term weakening: a line that doesn\'t help, or fires at the wrong time, gets thinner.',
+    'An unused path slowly grows over with grass.',
+    'Without it every line only grows, everything becomes strong, and nothing means anything.',
+    ['How much thinner per failure?', 'What happens at the minimum (0.1): stay, or get pruned?']],
+  '19': ['The rule that picks LTP or LTD from spike order: sender fires just before the receiver → thicker; just after → thinner.',
+    'If the doorbell rings right before the door opens, you learn "bell → door". If it rings after, the bell didn\'t cause it.',
+    'The main learning rule for spiking networks. It needs the clock and recorded spike times.',
+    ['How close in time counts (e.g. within 20 ms)?', 'How big is each change?', 'Do closer spikes change the line more?']],
+  '24': ['When the hub fires, a signal goes back into its input lines saying "I just fired".',
+    'A teacher saying "correct!" to everyone who answered just before.',
+    'It\'s how each input line knows whether it helped — STDP depends on it.',
+    ['In code this is just "each line checks when its neuron last fired". Is that enough?', 'Or do you want it as a visible backward signal?']],
+  '29': ['Chemicals like dopamine that change how a whole area behaves: more alert, faster learning, calmer.',
+    'Coffee: it doesn\'t send messages, but changes how your whole brain responds.',
+    'One global signal can switch behaviour (alert / calm / learn now). The docs say it\'s fine to skip at first.',
+    ['Skip for v1?', 'Or add one global "mood" value that scales thresholds or learning speed?']],
+  '30': ['Learning only sticks if a "that was good" signal arrives shortly after.',
+    'Training a dog: the treat right after the trick makes it learn the trick.',
+    'STDP alone learns any pattern, useful or not. Reward makes it learn useful behaviour.',
+    ['Where does reward come from (a sensor, a game score)?', 'How long does a line stay "eligible" for reward (e.g. 1 s)?']],
+  '21': ['Making new lines between neurons that weren\'t connected.',
+    'Making a new friend after you keep meeting at the same place.',
+    'Lets the network rewire itself. Your note has two triggers: starvation and Hebbian.',
+    ['Which triggers?', 'Starting thickness?', 'Max lines per neuron?', 'How long does a trial line get to prove itself?']],
+  '37': ['The brain grows brand-new neurons where it needs them, and removes neurons that are dead.',
+    'A city building new houses where the neighbourhoods are crowded, and clearing empty lots.',
+    'Lets the brain grow beyond its starting size. Needs free spots in the brain space and a rule for when a region needs more.',
+    ['When does a region grow a neuron?', 'How often at most?', 'How is the new neuron wired in?', 'When does a neuron die?']],
+  '22': ['Removing lines that are unused or stay very weak.',
+    'Deleting phone contacts you never call.',
+    'Growth without pruning becomes a jungle, and with R14 more lines also means smaller pools.',
+    ['How long unused before removal?', 'Weakness limit (e.g. stays at 0.1 for 1000 ms)?', 'Minimum lines a neuron always keeps?']],
+  '31': ['Each neuron keeps itself in a healthy activity range — not silent, not overexcited.',
+    'A thermostat: too cold → heat on, too hot → heat off.',
+    'Stops neurons dying out or exploding as learning changes thicknesses.',
+    ['Target firing rate?', 'What gets adjusted: threshold, thickness or growth?', 'How fast?']],
+  '26': ['Information carried by when spikes happen, not just how many.',
+    'In a race, who finishes first tells you who\'s fastest — no lap counting needed.',
+    'Needed for STDP and fast reactions. Requires a clock and recorded spike times.',
+    ['Clock step (1 ms)?', 'Fixed order of events inside one step?', 'How many recent spike times does each neuron remember?']],
+  '28': ['Large groups of neurons firing together in a repeating rhythm (brain waves).',
+    'A stadium wave: nobody leads it, it comes from people reacting to their neighbours.',
+    'Rhythms coordinate groups of neurons. They usually emerge from + and − neurons with delays rather than being coded directly.',
+    ['Let them emerge, or add pacemaker neurons?', 'Should tests measure them?']],
+  '34': ['Support cells that feed neurons, clean up chemicals and tune synapses.',
+    'Stage crew in a theatre: not the actors, but the show fails without them.',
+    'Big in biology, but almost every simulation leaves them out.',
+    ['Skip?']],
+  '35': ['Long-lasting memory stored by switching genes on or off inside the neuron.',
+    'Saving to a hard drive instead of keeping it in RAM.',
+    'Makes memories last for years. Line thickness already acts as your long-term memory.',
+    ['Skip?', 'Or add a "locked" flag so very important lines stop weakening?']],
+  '36': ['Firing costs energy, so neurons that fire too much run low.',
+    'A phone battery draining with heavy use.',
+    'Real brains are limited by energy, which keeps firing sparse — another brake.',
+    ['Skip?', 'Or give each neuron an energy budget that refills over time?']],
+  'D1': ['When a neuron fires, do all its output lines send, or only one?',
+    'Shouting to the room vs. whispering to one person.',
+    'Same question as #12 Fan-out; answer it once and keep both consistent.',
+    ['All or one?']],
+  'D2': ['Two lines of the same neuron want to send in the same step: which goes first?',
+    'Two people reaching a door at the same moment.',
+    'With your 2 mini-lines (separate in and out) this may never happen, so it may not need a rule.',
+    ['Lower line ID first, random, or not needed?']],
+  'D3': ['How long after firing a neuron can\'t fire again.',
+    'A camera flash recharging between photos.',
+    'Real neurons rest ~1–2 ms. Longer rest = fewer, slower spikes.',
+    ['How many ms (recommended 2)?']],
+  'D4': ['What the hub\'s charge becomes right after firing.',
+    'Emptying the bucket completely vs. pouring off just the top.',
+    'Reset to 0 = one clean spike. Keeping the excess = strong input gives bursts (#27).',
+    ['Reset to 0, or subtract 0.5 and keep the rest?']],
+  'D5': ['Which brakes stop runaway firing: leak, inhibition or both.',
+    'A car needs brakes; a hill (leak) also slows you down.',
+    'So far you\'ve chosen a 20 ms dump window plus minus lines.',
+    ['Are those two enough, or add fatigue (#20) too?']],
+  'D6': ['What makes a neuron grow a new line.',
+    'Making a new friend because you keep meeting them.',
+    'Same as #21 Grow connections.',
+    ['Starvation, Hebbian, random trial lines — which ones?']],
+  'D7': ['The rule that changes line thickness over time.',
+    'Paths in grass getting clearer or growing over.',
+    'STDP is the standard. Adding reward makes it learn useful things, not just any pattern.',
+    ['STDP alone, or STDP + reward?']],
+  'D8': ['Can a line carry spikes in both directions?',
+    'A two-way street vs. two one-way streets side by side.',
+    'Your 2 mini-lines idea = each line is a one-way in plus a one-way out. Real chemical synapses are one-way.',
+    ['Keep the 2 mini-lines, or plain one-way lines?']],
+  'F1': ['Each line\'s pool shares the neuron\'s space. With 3+ lines a pool can hold at most 1/3, so it can never reach 0.5 to pass charge to the hub.',
+    'Three cups that can each hold 1/3 litre can never pour out half a litre.',
+    'As written, a neuron with 3+ lines can never fire. This must be fixed before building.',
+    ['Pool passes its charge when full?', 'Pool passes any charge every step?', 'Or the 0.5 limit scales with the number of lines?']],
+  'F2': ['Charge only ever goes up, so eventually every neuron fires and keeps others firing.',
+    'One phone call that sets off a chain of everyone calling everyone.',
+    'Brakes chosen so far: 20 ms dump window + inhibition (+ maybe fatigue).',
+    ['Are those enough? (Testing will show.)']],
+  'F3': ['Lines that both send and receive need extra rules (who sends first, conflicts).',
+    'A one-lane bridge that needs traffic lights.',
+    'Your 2 mini-lines idea removes the conflict.',
+    ['Mark solved by the 2 mini-lines?']],
+  'F4': ['After firing, charge above 0.5 is thrown away (R16, temporary).',
+    'Pouring out the whole bucket even though only half was needed.',
+    'Dumping = one spike per input wave. Keeping it = bursts.',
+    ['Keep dumping, or carry the excess over?']],
+  'F5': ['The threshold can be pushed higher than the most charge the hub can hold.',
+    'A high-jump bar set above the ceiling: nobody can ever clear it.',
+    'Homeostasis (max 0.8) × Rfuel (max 2) = 1.6, but the hub stops at 1, so that neuron could never fire again.',
+    ['Cap the final threshold below 1 (e.g. 0.95)?']],
+  'F6': ['How an awake neuron decides how often to tick.',
+    'A watch that can tick every second or every minute, but nobody set it.',
+    '#26 allows 0.01–1 ms but gives no rule, so the code can\'t choose.',
+    ['One fixed active speed (1 ms) plus sleep for v1?', 'Or a rule like "busy → faster"?']],
+  'F7': ['Which neurons count as "nearby" for growing new lines and grouping glia.',
+    'A neighbourhood needs addresses before you can say who lives next door.',
+    'Starvation growth (#21) and glia groups (#34) both use it, but neurons have no positions.',
+    ['Give neurons positions now (and use the closest ones)?', 'Or "nearby" = connected within 2 hops?']],
+  'F8': ['The fixed order of steps every neuron follows in each tick.',
+    'A recipe: mixing before heating gives a different cake than heating before mixing.',
+    'Without a fixed order, the same network can give different results depending on update order.',
+    ['What order: deliver spikes → pools → hub → fire → update fatigue / energy?']],
+};
+
+// Snapshot of neuron_spec.json, used when this browser has no newer notes
+const SAVED = {"updated":"2026-11-01T02:50:01.108Z","todos":{"V20":"When a reward arrives (surprise x gain >= 0.2), up to 4 neurons that fired in the last 300 ms each grow a trial line (start 0.2) from a neuron that fired 2-20 ms before them (their likely cause). Trial lines must reach 0.3 within 3 s or they are removed. Research 2026-11-02: v2 went from 2.9 to 11.1 squares and became the only bee that learns to steer; ahead of LIF and ALIF in all 18 tests. ALIF given the same rule only went 3.2 -> 3.8.","V1":"Hub, pools and mini-buckets lose charge with a 50 ms time constant every tick (applied before new input arrives). Nothing is wiped at once; the 20 ms dump (R16/#5) is off in v2. Param: leak_tau_ms = 50.","V2":"Homeostasis threshold starts at 0.3 (was 0.5), may move between 0.15 and 0.9 so busy neurons can be calmed.","V3":"Up to 64 lines per neuron (max_lines = 64, memory sized from it). A neuron counts as 'full' for neurogenesis at 6 lines.","V4":"Each spike multiplies the line's energy by 0.8 (was 0.7), recovery time constant 30 ms (was 50).","V5":"Busy neurons' inputs thin x0.998 per check (-2%/s, was -10%/s); threshold steps 0.001 per check. Tested: removing thinning completely made the brain run away (every layer ~38 Hz), so a gentle version stays.","V6":"Astrocytes raise local Rfuel only for neurons above 10 Hz (was: above the 2 Hz target). Tested: 50 Hz was too late.","V7":"Per-neuron target (S.target). In the bee brain: Kenyon cells 1 Hz, MBONs 5 Hz, the rest 2 Hz.","V8":"A line is no longer removed for being quiet; only lines learning made thinner than 0.1, or failed trial lines. Pruning checks a rotating 1/10 slice of the lines each time (speed).","V9":"A newly grown trial line has 3 s (was 0.5 s) to reach 0.3 before it is removed.","V10":"Brains get free spots (bee: 40) so neurogenesis (#37) can actually add neurons.","V11":"Each neuron has 4 mini-buckets. Excitatory lines fill their mini-bucket; once it holds 0.25 it pours its charge x1.5 into the hub (dendritic spike). Inhibitory charge still goes straight to the hub.","V12":"A mini-bucket filled past 0.9 in one go chokes: it empties without pouring. One neuron can solve XOR (A alone fires, B alone fires, A+B together stays silent). Tested in tests/test_v2.py; LIF and ALIF cannot.","V13":"A new input line joins the mini-bucket holding the most charge when it is made, so inputs active together end up in the same mini-bucket.","V14":"Timing learning (LTP) for an excitatory input only counts if its mini-bucket poured within the last 20 ms (it helped cause the spike).","V15":"A line strengthened by a reward is safe from pruning for 5 minutes.","V16":"A starving neuron takes a new line from a neuron that fired in the last 50 ms (any layer). Hebbian growth only happens while a neuron fires below 2x its target rate. Tested: without that limit growth fed itself and ran away.","V17":"Eligibility has a fast memory (250 ms) and a slow one (2 s); a reward uses both. Given to every bee in the test.","V18":"Learning uses reward minus the expected reward (running average), x4. Given to every bee in the test.","V19":"A reward only visits lines that have eligibility (a kept list), not every line in the brain. Same result, less work.",
+  "12":"all can fire together and receive together at the same time like parallel processing, cause each line have 2 sub lines in parallel which makes the neuron more fast",
+  "33":"hmm lets do this, so each line is now a 2 line in a 1 line so that one line can take the input and the another line can send the output this make the neuron more powerful, now each line will have 2 mini lines inside it, one input one output, so now that means ",
+  "21":"Two triggers:\n1. Starvation: if the hub has not fired for 50 steps, grow 1 new input line from a random nearby neuron, thickness 0.1.\n2. Hebbian: if two unconnected neurons fire within 3 steps of each other 5+ times, grow a line between them (thickness 0.1, sender = the one that fired first).\nNew lines are \"trial\" lines. A trial line becomes permanent if it helped the receiver fire (STDP thickens it past 0.3) within 200 steps; otherwise remove it.\nLimit: max 8 lines per neuron.",
+  "31":"Each neuron has a target firing rate (e.g. 1 spike per 20 steps), measured as an average over the last 200 steps.\n- Fires too little → lower its threshold slightly (min 0.3) and allow starvation growth.\n- Fires too much → raise its threshold slightly (max 0.8) and thin all its input lines a little (scale by 0.99).\nChange is slow (tiny steps) so it doesn't fight learning."
+}};
+
+const STORE = 'neuron_spec_v1';
+const STATUS = { done: 'Done', half: 'Half', missing: 'Missing', skip: 'Skip' };
+let state = {};          // id -> { status, todo }
+let fileHandle = null;
+let dirty = false;
+
+function load() {
+  let localTime = '';
+  try {
+    state = JSON.parse(localStorage.getItem(STORE)) || {};
+    localTime = localStorage.getItem(STORE + '_t') || '';
+  } catch { state = {}; }
+  // Snapshot wins over older (or untimed) browser notes, but never blanks a note
+  const snapshotNewer = !localTime || localTime < SAVED.updated;
+  for (const [id, todo] of Object.entries(SAVED.todos)) {
+    if (!state[id]) continue;   // entry() creates it with the snapshot below
+    if (snapshotNewer || !state[id].todo.trim()) state[id].todo = todo;
+  }
+}
+function persist() {
+  try {
+    localStorage.setItem(STORE, JSON.stringify(state));
+    localStorage.setItem(STORE + '_t', new Date().toISOString());
+  } catch {}
+}
+function entry(id, def) {
+  if (!state[id]) state[id] = { status: def, todo: SAVED.todos[id] || '' };
+  return state[id];
+}
+
+function explainHtml([what, example, why, questions], open) {
+  return `<details class="explain"${open ? ' open' : ''}><summary>Explain simply</summary>
+    <dl>
+      <dt>What it is</dt><dd>${what}</dd>
+      <dt>Everyday example</dt><dd>${example}</dd>
+      <dt>Why it matters here</dt><dd>${why}</dd>
+      <dt>Answer these</dt><dd><ul>${questions.map(q => `<li>${q}</li>`).join('')}</ul></dd>
+    </dl></details>`;
+}
+
+function render() {
+  const root = document.getElementById('root');
+  root.innerHTML = '';
+  for (const g of GROUPS) {
+    const sec = document.createElement('section');
+    sec.innerHTML = `<h2>${g.title}</h2>`;
+    for (const [id, name, def, doc, prio] of g.items) {
+      const e = entry(id, def);
+      const div = document.createElement('div');
+      // A submitted function becomes done; its answer is then shown as "what it does"
+      const specDone = e.status === 'done' && e.confirmed;
+      const canConfirm = e.status !== 'done';
+      const confirmed = canConfirm && e.confirmed;   // only decisions/flaws stay "confirmed" without becoming done
+      div.className = 'item' + (prio ? ' prio' : '') + (confirmed || specDone ? ' confirmed' : '');
+      div.dataset.id = id;
+      const statusHtml = g.kind === 'decision' ? '' :
+        `<select class="s-${e.status}" data-role="status">${Object.entries(STATUS)
+          .map(([k, v]) => `<option value="${k}"${k === e.status ? ' selected' : ''}>${v}</option>`).join('')}</select>`;
+      div.innerHTML = `
+        <div class="head">
+          <span class="num">${id}</span><span class="name">${name}</span>
+          ${prio ? '<span class="tag">priority</span>' : ''}${statusHtml}
+        </div>
+        ${doc ? `<div class="doc">${doc}</div>` : ''}
+        ${canConfirm && EXPLAIN[id] ? explainHtml(EXPLAIN[id], !confirmed) : ''}
+        ${specDone
+          ? `<details class="does"><summary>What it does</summary><p class="spec"></p></details>
+             <div class="actions"><button data-role="reopen">Edit</button><span class="ok">✓ Confirmed</span></div>`
+          : e.status === 'done'
+          // done items: notes box sits inside the "what it does" dropdown, open if notes exist
+          ? `<details class="does"${e.todo.trim() ? ' open' : ''}><summary>What it does</summary>
+               <p>${DOES[id] || doc}</p>
+               <textarea data-role="todo" placeholder="Change anything? (optional)"></textarea></details>`
+          : `<textarea data-role="todo" placeholder="${g.kind === 'decision' ? 'Your decision…' : 'What should the neuron do for this?'}"${confirmed ? ' readonly' : ''}></textarea>
+             <div class="actions">
+               <button data-role="confirm"${!confirmed && !e.todo.trim() ? ' disabled' : ''}>${confirmed ? 'Edit' : 'Submit'}</button>
+               ${confirmed ? '<span class="ok">✓ Confirmed</span>' : ''}
+             </div>`}`;
+      if (specDone) div.querySelector('.spec').textContent = e.todo;
+      else div.querySelector('textarea').value = e.todo;
+      sec.appendChild(div);
+    }
+    root.appendChild(sec);
+  }
+  applyFilter();
+  updateStats();
+}
+
+document.addEventListener('input', ev => {
+  const item = ev.target.closest('.item');
+  if (!item) return;
+  const e = state[item.dataset.id];
+  if (ev.target.dataset.role === 'todo') {
+    e.todo = ev.target.value;
+    const btn = item.querySelector('[data-role="confirm"]');
+    if (btn) btn.disabled = !e.todo.trim();
+  }
+  if (ev.target.dataset.role === 'status') {
+    e.status = ev.target.value;
+    ev.target.className = 's-' + e.status;
+    if (e.status !== 'done') e.confirmed = false;
+  }
+  persist(); markDirty(); updateStats();
+  scheduleWrite();
+  if (ev.target.dataset.role === 'status') render();   // switch between dropdown and plain notes box
+});
+
+// Submit: a function becomes done (old status kept for Edit); a decision/flaw just locks.
+// Edit / reopen undoes it.
+document.addEventListener('click', ev => {
+  const role = ev.target.dataset.role;
+  if (role !== 'confirm' && role !== 'reopen') return;
+  const item = ev.target.closest('.item');
+  const e = state[item.dataset.id];
+  const isDecision = !item.querySelector('select');
+  if (role === 'reopen') {
+    e.status = e.prevStatus || 'half';
+    e.confirmed = false;
+  } else if (e.confirmed) {
+    e.confirmed = false;
+  } else {
+    e.confirmed = true;
+    if (!isDecision) { e.prevStatus = e.status; e.status = 'done'; }
+  }
+  persist(); markDirty(); scheduleWrite(); render();
+});
+
+function updateStats() {
+  const c = { done: 0, half: 0, missing: 0, skip: 0 }; let notes = 0, left = 0;
+  for (const g of GROUPS) for (const [id] of g.items) {
+    const e = state[id];
+    if (g.kind !== 'decision') c[e.status]++;
+    if (e.todo.trim()) notes++;
+    if (e.status !== 'done' && !e.confirmed) left++;
+  }
+  document.getElementById('stats').innerHTML =
+    `<b>${c.done}</b> done · <b>${c.half}</b> half · <b>${c.missing}</b> missing · <b>${c.skip}</b> skip · ${notes} with notes · <b>${left}</b> left to confirm`;
+}
+
+function applyFilter() {
+  const f = document.getElementById('filter').value;
+  document.querySelectorAll('.item').forEach(el => {
+    const e = state[el.dataset.id];
+    const isDecision = !el.querySelector('select');
+    let show = true;
+    if (f === 'todo') show = !!e.todo.trim();
+    else if (f === 'empty') show = !e.todo.trim();
+    else if (f === 'confirmed') show = !!e.confirmed;
+    else if (f === 'unconfirmed') show = e.status !== 'done' && !e.confirmed;
+    else if (f !== 'all') show = !isDecision && e.status === f;
+    el.classList.toggle('hidden', !show);
+  });
+  document.querySelectorAll('section').forEach(s =>
+    s.classList.toggle('hidden', !s.querySelector('.item:not(.hidden)')));
+}
+document.getElementById('filter').addEventListener('change', applyFilter);
+
+function exportData() {
+  return {
+    spec: 'Hub Neuron functionality spec',
+    updated: new Date().toISOString(),
+    groups: GROUPS.map(g => ({
+      group: g.title,
+      items: g.items.map(([id, name, def, doc]) => ({
+        id, name,
+        ...(g.kind === 'decision' ? {} : { status: state[id].status, original_status: def }),
+        doc_note: doc, todo: state[id].todo,
+        confirmed: !!state[id].confirmed,
+        ...(state[id].prevStatus ? { prev_status: state[id].prevStatus } : {}),
+      })),
+    })),
+  };
+}
+
+function markDirty() { dirty = true; if (fileHandle) setSaveState('Saving…'); }
+function setSaveState(t) { document.getElementById('saveState').textContent = t; }
+
+// ---- Linked file: handle kept in IndexedDB so the page re-opens the same file ----
+const FS = 'showOpenFilePicker' in window;
+const JSON_TYPES = [{ description: 'JSON', accept: { 'application/json': ['.json'] } }];
+const $ = id => document.getElementById(id);
+
+function idb(mode, fn) {
+  return new Promise((res, rej) => {
+    const open = indexedDB.open('neuron_spec', 1);
+    open.onupgradeneeded = () => open.result.createObjectStore('kv');
+    open.onerror = () => rej(open.error);
+    open.onsuccess = () => {
+      const tx = open.result.transaction('kv', mode);
+      const req = fn(tx.objectStore('kv'));
+      tx.oncomplete = () => res(req && req.result);
+      tx.onerror = () => rej(tx.error);
+    };
+  });
+}
+const getHandle = () => idb('readonly', s => s.get('file')).catch(() => null);
+const putHandle = h => idb('readwrite', s => h ? s.put(h, 'file') : s.delete('file')).catch(() => {});
+
+function showButtons(mode) {   // 'unlinked' | 'linked' | 'reconnect' | 'nofs'
+  $('openBtn').classList.toggle('hidden', mode !== 'unlinked');
+  $('createBtn').classList.toggle('hidden', mode !== 'unlinked');
+  $('reconnectBtn').classList.toggle('hidden', mode !== 'reconnect');
+  $('unlinkBtn').classList.toggle('hidden', mode !== 'linked' && mode !== 'reconnect');
+  $('downloadBtn').classList.toggle('hidden', mode !== 'nofs');
+}
+
+function applyData(data) {
+  for (const g of data.groups || []) for (const it of g.items || []) {
+    state[it.id] = { status: it.status || state[it.id]?.status || '', todo: it.todo || '',
+      confirmed: !!it.confirmed, ...(it.prev_status ? { prevStatus: it.prev_status } : {}) };
+  }
+  persist(); render();
+}
+
+async function readLinked() {
+  const text = await (await fileHandle.getFile()).text();
+  if (text.trim()) applyData(JSON.parse(text));
+  else await writeLinked();          // empty new file: fill it with current notes
+}
+
+async function writeLinked() {
+  if (!fileHandle) return;
+  try {
+    const w = await fileHandle.createWritable();
+    await w.write(JSON.stringify(exportData(), null, 2)); await w.close();
+    dirty = false;
+    setSaveState(`Saved to ${fileHandle.name} ${new Date().toLocaleTimeString()}`);
+  } catch (err) {
+    setSaveState('Save failed: ' + err.message);
+    if (err.name === 'NotAllowedError') showButtons('reconnect');
+  }
+}
+
+let writeTimer = null;
+function scheduleWrite() {
+  if (!fileHandle) return;
+  clearTimeout(writeTimer);
+  writeTimer = setTimeout(writeLinked, 600);
+}
+
+async function link(handle, isNew) {
+  fileHandle = handle;
+  await putHandle(handle);
+  showButtons('linked');
+  try {
+    if (isNew) await writeLinked(); else await readLinked();
+    setSaveState(`Linked: ${handle.name}`);
+  } catch (err) { setSaveState('Load failed: ' + err.message); }
+}
+
+$('openBtn').addEventListener('click', async () => {
+  try { const [h] = await showOpenFilePicker({ types: JSON_TYPES }); await link(h, false); }
+  catch (err) { if (err.name !== 'AbortError') setSaveState(err.message); }
+});
+$('createBtn').addEventListener('click', async () => {
+  try { await link(await showSaveFilePicker({ suggestedName: 'neuron_spec.json', types: JSON_TYPES }), true); }
+  catch (err) { if (err.name !== 'AbortError') setSaveState(err.message); }
+});
+$('reconnectBtn').addEventListener('click', async () => {
+  if (await fileHandle.requestPermission({ mode: 'readwrite' }) !== 'granted') return;
+  showButtons('linked');
+  try { await readLinked(); setSaveState(`Linked: ${fileHandle.name}`); }
+  catch (err) { setSaveState('Load failed: ' + err.message); }
+});
+$('unlinkBtn').addEventListener('click', async () => {
+  fileHandle = null; await putHandle(null); showButtons('unlinked'); setSaveState('Unlinked');
+});
+$('downloadBtn').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(exportData(), null, 2)], { type: 'application/json' }));
+  a.download = 'neuron_spec.json'; a.click(); URL.revokeObjectURL(a.href);
+  dirty = false;
+});
+
+document.addEventListener('keydown', ev => {
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 's') {
+    ev.preventDefault();
+    if (fileHandle) { clearTimeout(writeTimer); writeLinked(); } else if (!FS) $('downloadBtn').click();
+  }
+});
+
+window.addEventListener('beforeunload', ev => { if (dirty) { ev.preventDefault(); ev.returnValue = ''; } });
+
+async function init() {
+  load(); render(); persist();
+  if (!FS) { showButtons('nofs'); setSaveState('Browser can\'t link files — use Chrome or Edge'); return; }
+  const h = await getHandle();
+  if (!h) { showButtons('unlinked'); return; }
+  fileHandle = h;
+  if (await h.queryPermission({ mode: 'readwrite' }) === 'granted') {
+    showButtons('linked');
+    try { await readLinked(); setSaveState(`Linked: ${h.name}`); }
+    catch (err) { setSaveState('Load failed: ' + err.message); }
+  } else {
+    showButtons('reconnect');
+    setSaveState(`Click Reconnect to load ${h.name}`);
+  }
+}
+init();
+</script>
+</body>
+</html>

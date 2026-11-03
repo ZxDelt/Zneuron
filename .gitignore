@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# Saved brains (large, local only)
+MVP/brains/
+*.brain
+
+# Local tools
+graphify-out/
+.graphifyignore
+.claude/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

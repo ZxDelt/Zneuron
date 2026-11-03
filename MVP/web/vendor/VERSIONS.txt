@@ -1,0 +1,3 @@
+three 0.186.1 (MIT)
+dockview-core 8.5.1 (MIT)
+Downloaded from npm on 2026-11-01. Only the files used are kept.

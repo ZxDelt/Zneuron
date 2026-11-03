@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SuperNeuron Live</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --line: #30363d; --ink: #e6edf3; --muted: #8b949e;
+    --exc: #3fb950; --inh: #f85149; --spike: #ffd33d; --lock: #d2a8ff; --blue: #58a6ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 8px 14px;
+    border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 2; }
+  h1 { font-size: 15px; margin: 0 8px 0 0; }
+  .stat { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .stat b { color: var(--ink); }
+  button, select { font: inherit; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--ink); cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  .hint { color: var(--muted); font-size: 12px; margin-left: auto; }
+  #conn { font-size: 12px; }
+  main { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(340px, 1fr); gap: 12px; padding: 12px 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+  .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+  .card h2 span { text-transform: none; letter-spacing: 0; color: var(--ink); font-weight: 500; }
+  canvas { width: 100%; display: block; }
+  #map { aspect-ratio: 1 / 1; cursor: crosshair; }
+  #raster { height: 150px; } #bars { height: 150px; } #trace { height: 120px; } #drives { height: 90px; }
+  .legend { color: var(--muted); font-size: 11.5px; margin-top: 6px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 10px; vertical-align: -1px; }
+  .meter { display: grid; grid-template-columns: 110px 1fr 70px; gap: 8px; align-items: center; margin: 3px 0; }
+  .meter .track { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+  .meter .fill { height: 100%; background: var(--blue); }
+  .meter .num { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .chip { display: inline-block; padding: 0 6px; margin: 1px 2px; border-radius: 4px; border: 1px solid var(--line);
+    cursor: pointer; font-variant-numeric: tabular-nums; }
+  .chip:hover { border-color: var(--ink); }
+  .row { margin: 4px 0; }
+  .sub { color: var(--muted); font-size: 12px; }
+  ul.why { list-style: none; margin: 0; padding-left: 14px; border-left: 1px solid var(--line); }
+  ul.why.root { padding-left: 0; border-left: none; }
+  ul.why li { margin: 3px 0; }
+  .plus { color: var(--exc); } .minus { color: var(--inh); } .out { color: var(--spike); }
+  .alarm { padding: 5px 8px; border-radius: 6px; margin: 4px 0; }
+  .alarm.ok { background: #12261a; color: var(--exc); }
+  .alarm.warn { background: #2b2410; color: var(--spike); }
+  .alarm.danger { background: #2d1214; color: var(--inh); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>SuperNeuron Live</h1>
+  <span class="stat">life <b id="t">00:00:00</b></span>
+  <span class="stat">lines <b id="nlines">0</b></span>
+  <span class="stat">awake <b id="nawake">0</b></span>
+  <button id="pause">Pause</button>
+  <button id="step">Step 1 ms</button>
+  <label class="stat">speed <select id="speed"></select> ms/frame</label>
+  <span id="conn" class="stat">connecting…</span>
+  <span class="hint">space pause · → step · ↑/↓ speed · click a neuron to inspect</span>
+</header>
+
+<main>
+  <div>
+    <div class="card">
+      <h2>Brain space <span id="layoutName">(2D square)</span></h2>
+      <canvas id="map"></canvas>
+      <div class="legend">
+        <i style="background:var(--exc)"></i>excitatory
+        <i style="background:var(--inh)"></i>inhibitory
+        <i style="background:var(--spike)"></i>spike / just fired
+        <i style="background:var(--lock)"></i>locked line
+        <br>Each neuron = square body · inside split evenly into one pool per line (slice lights up as it fills) ·
+        small centre square = hub (bright yellow = about to fire) · zigzag = spike travelling · arrow = receiving end ·
+        thick = strong · dashed = trial line · blue body = sensor (S) · faded = asleep · coloured halo = thinking group
+      </div>
+    </div>
+    <div class="card">
+      <h2>Spikes <span>last 500 ms, one row per neuron</span></h2>
+      <canvas id="raster"></canvas>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Alarms</h2>
+      <div id="alarms"></div>
+    </div>
+    <div class="card">
+      <h2>Neuron <span id="selTitle"></span></h2>
+      <canvas id="bars"></canvas>
+      <canvas id="trace" style="margin-top:8px"></canvas>
+      <div class="legend">yellow = hub charge · dashed white = threshold · dotted = pool capacity</div>
+    </div>
+    <div class="card">
+      <h2>Thinking window</h2>
+      <div id="capacity"></div>
+      <div class="row sub" style="margin-top:8px">Active groups (neurons firing together, last 500 ms)</div>
+      <div id="groups"></div>
+      <div class="row sub" style="margin-top:8px">Live chains (what caused what, last 60 ms)</div>
+      <div id="chains"></div>
+    </div>
+    <div class="card">
+      <h2>Why it fired <span id="whyTitle"></span></h2>
+      <div id="why"></div>
+    </div>
+    <div class="card">
+      <h2>What it learned <span>last 2 s</span></h2>
+      <div class="cols"><div><div class="sub">Strengthened</div><div id="up"></div></div>
+        <div><div class="sub">Weakened</div><div id="down"></div></div></div>
+      <div class="sub" style="margin-top:8px">Growth / pruning / locks (last 10 s)</div>
+      <div id="events"></div>
+    </div>
+    <div class="card">
+      <h2>Drives <span>Lfuel (green) · Rfuel (blue) · Cfuel (purple)</span></h2>
+      <canvas id="drives"></canvas>
+      <div class="legend">Lfuel = reward (fixed at 1 in v1) · Rfuel = calm (threshold ×) · Cfuel = curiosity (learning speed)</div>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const C = { exc: '#3fb950', inh: '#f85149', spike: '#ffd33d', lock: '#d2a8ff', blue: '#58a6ff',
+  muted: '#8b949e', line: '#30363d', bg: '#0d1117', ink: '#e6edf3' };
+const GROUP_COLORS = ['#58a6ff', '#ff7b72', '#d2a8ff', '#ffa657', '#7ee787', '#79c0ff', '#f778ba', '#e3b341'];
+let F = null, I = {}, lastHtml = 0, groupOf = new Map();
+
+// ---------- connection ----------
+function connect() {
+  const es = new EventSource('/stream');
+  es.onopen = () => { $('conn').textContent = 'live'; $('conn').style.color = C.exc; };
+  es.onerror = () => { $('conn').textContent = 'disconnected — is run_live.py running?'; $('conn').style.color = C.inh; };
+  es.onmessage = e => {
+    F = JSON.parse(e.data);
+    if (F.insight && F.insight.alarms) I = F.insight;
+  };
+}
+const send = cmd => fetch('/control', { method: 'POST', body: JSON.stringify(cmd) });
+
+// ---------- controls ----------
+$('pause').onclick = () => send({ cmd: 'pause' });
+$('step').onclick = () => send({ cmd: 'step', ticks: 1 });
+$('speed').onchange = e => send({ cmd: 'speed', value: +e.target.value });
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'SELECT') return;
+  if (e.key === ' ') { e.preventDefault(); send({ cmd: 'pause' }); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); send({ cmd: 'step', ticks: 1 }); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); send({ cmd: 'faster' }); }
+  else if (e.key === 'ArrowDown') { e.preventDefault(); send({ cmd: 'slower' }); }
+});
+document.addEventListener('click', e => {
+  const id = e.target.dataset && e.target.dataset.nid;
+  if (id !== undefined) send({ cmd: 'select', id: +id });
+});
+
+// ---------- canvas helpers ----------
+function fit(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return [ctx, w, h];
+}
+// charge colour: dark purple -> orange -> yellow, like a heat map
+const HEAT = [[20, 11, 52], [120, 28, 109], [229, 92, 48], [252, 255, 164]];
+function heat(v) {
+  v = Math.max(0, Math.min(1, v)) * (HEAT.length - 1);
+  const i = Math.min(HEAT.length - 2, Math.floor(v)), f = v - i;
+  return HEAT[i].map((c, k) => Math.round(c + (HEAT[i + 1][k] - c) * f));
+}
+
+// ---------- map ----------
+let mapTf = null;
+function drawMap() {
+  const [ctx, w, h] = fit($('map'));
+  const N = F.neurons;
+  // body half-size: about a quarter of the spacing between neurons (Design 3: square body)
+  const spacing = F.size / Math.ceil(Math.sqrt(N.length));
+  const pad = 22, s = (Math.min(w, h) - 2 * pad) / F.size;
+  const B = Math.max(7, Math.min(20, spacing * s * 0.26));
+  const X = x => pad + x * s, Y = y => h - pad - y * s;
+  mapTf = { pad, s, h };
+  const P = n => [X(n[1]), Y(n[2])];
+  // where a line leaves the square body, heading towards (dx, dy)
+  const edge = (px, py, dx, dy) => {
+    const len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
+    const k = B / Math.max(Math.abs(ux), Math.abs(uy));
+    return [px + ux * k, py + uy * k];
+  };
+
+  // lines: from body edge to body edge, thickness = strength, arrow at the receiving end
+  ctx.lineCap = 'round';
+  const segs = [];
+  for (const [a, b, th, trial, locked] of F.lines) {
+    const [ax, ay] = P(N[a]), [bx, by] = P(N[b]);
+    const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1;
+    const ox = -dy / len * 2.5, oy = dx / len * 2.5;   // A→B and B→A sit side by side (D8)
+    const [sx, sy] = edge(ax, ay, dx, dy), [ex, ey] = edge(bx, by, -dx, -dy);
+    const col = locked ? C.lock : (th > 0 ? C.exc : C.inh);
+    ctx.strokeStyle = col; ctx.fillStyle = col; ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 0.6 + 3.2 * Math.abs(th);
+    ctx.setLineDash(trial ? [4, 4] : []);
+    ctx.beginPath(); ctx.moveTo(sx + ox, sy + oy); ctx.lineTo(ex + ox, ey + oy); ctx.stroke();
+    ctx.setLineDash([]);
+    const ux = dx / len, uy = dy / len, hx = ex + ox, hy = ey + oy, aw = 3 + 2 * Math.abs(th);
+    ctx.beginPath(); ctx.moveTo(hx, hy);
+    ctx.lineTo(hx - ux * aw * 2 - uy * aw, hy - uy * aw * 2 + ux * aw);
+    ctx.lineTo(hx - ux * aw * 2 + uy * aw, hy - uy * aw * 2 - ux * aw); ctx.fill();
+    segs[a * 100000 + b] = [sx + ox, sy + oy, ex + ox, ey + oy];
+  }
+  ctx.globalAlpha = 1;
+
+  // spikes in flight: a zigzag travelling along its line (R13)
+  ctx.lineWidth = 2;
+  for (const [a, b, f, c] of F.inflight) {
+    const seg = segs[a * 100000 + b]; if (!seg) continue;
+    const [sx, sy, ex, ey] = seg, dx = ex - sx, dy = ey - sy, len = Math.hypot(dx, dy) || 1;
+    const ux = dx / len, uy = dy / len, zl = Math.min(22, len * 0.5), cx = sx + dx * f, cy = sy + dy * f;
+    ctx.strokeStyle = c >= 0 ? C.spike : C.inh;
+    ctx.beginPath();
+    for (let i = 0; i <= 6; i++) {
+      const along = -zl / 2 + zl * i / 6, side = (i % 2 ? 4 : -4) * (i === 0 || i === 6 ? 0 : 1);
+      const px = cx + ux * along - uy * side, py = cy + uy * along + ux * side;
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  // neurons: square body, inside split evenly into one pool per line, small square hub in the centre
+  const fired = new Set(F.raster.filter(r => r[0] >= F.t - 3).map(r => r[1]));
+  ctx.font = '9px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (const [id, x, y, sign, sensor, hub, thr, awake, pools] of N) {
+    const [px, py] = [X(x), Y(y)];
+    const g = groupOf.get(id);
+    if (g) { ctx.fillStyle = g; ctx.globalAlpha = 0.28; ctx.fillRect(px - B - 6, py - B - 6, 2 * B + 12, 2 * B + 12); }
+    ctx.globalAlpha = awake ? 1 : 0.45;
+    ctx.fillStyle = sensor ? '#1f3a5f' : '#0b0f14';
+    ctx.fillRect(px - B, py - B, 2 * B, 2 * B);
+
+    // pools: equal slices around the hub, each slice faces its line (R14 even split)
+    if (pools.length) {
+      const angs = pools.map(([o, v]) => [Math.atan2(Y(N[o][2]) - py, X(N[o][1]) - px), v]).sort((p, q) => p[0] - q[0]);
+      const slice = 2 * Math.PI / angs.length, start = angs[0][0] - slice / 2;
+      ctx.save(); ctx.beginPath(); ctx.rect(px - B, py - B, 2 * B, 2 * B); ctx.clip();
+      angs.forEach(([, v], i) => {
+        const a0 = start + i * slice, a1 = a0 + slice;
+        if (v > 0) {
+          const [r, gg, b] = heat(0.25 + 0.75 * v);
+          ctx.fillStyle = `rgb(${r},${gg},${b})`;
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.arc(px, py, B * 1.6, a0, a1); ctx.closePath(); ctx.fill();
+        }
+        if (angs.length > 1) {
+          ctx.strokeStyle = '#3d444d'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + Math.cos(a0) * B * 1.6, py + Math.sin(a0) * B * 1.6); ctx.stroke();
+        }
+      });
+      ctx.restore();
+    }
+    ctx.strokeStyle = sign > 0 ? C.exc : C.inh; ctx.lineWidth = 2;
+    ctx.strokeRect(px - B, py - B, 2 * B, 2 * B);
+
+    // hub: fill shows charge vs threshold, bright yellow = about to fire
+    const hb = Math.max(3, B * 0.42), [hr, hg, hbb] = heat(hub / thr);
+    ctx.fillStyle = `rgb(${hr},${hg},${hbb})`; ctx.fillRect(px - hb, py - hb, 2 * hb, 2 * hb);
+    ctx.strokeStyle = '#e6edf3'; ctx.lineWidth = 1; ctx.strokeRect(px - hb, py - hb, 2 * hb, 2 * hb);
+    ctx.globalAlpha = 1;
+
+    if (fired.has(id)) { ctx.strokeStyle = C.spike; ctx.lineWidth = 2.5; ctx.strokeRect(px - B - 4, py - B - 4, 2 * B + 8, 2 * B + 8); }
+    if (id === F.selected) {
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      ctx.strokeRect(px - B - 8, py - B - 8, 2 * B + 16, 2 * B + 16); ctx.setLineDash([]);
+    }
+    ctx.fillStyle = C.muted; ctx.fillText(sensor ? `S${id}` : id, px, py + B + 3);
+  }
+}
+$('map').addEventListener('click', e => {
+  if (!F || !mapTf) return;
+  const rect = e.target.getBoundingClientRect();
+  const wx = (e.clientX - rect.left - mapTf.pad) / mapTf.s;
+  const wy = (mapTf.h - mapTf.pad - (e.clientY - rect.top)) / mapTf.s;
+  let best = null, bd = Infinity;
+  for (const n of F.neurons) { const d = (n[1] - wx) ** 2 + (n[2] - wy) ** 2; if (d < bd) { bd = d; best = n[0]; } }
+  if (best !== null) send({ cmd: 'select', id: best });
+});
+
+// ---------- raster ----------
+function drawRaster() {
+  const [ctx, w, h] = fit($('raster'));
+  const n = F.neurons.length, t0 = F.t - 500;
+  ctx.fillStyle = C.muted; ctx.font = '10px system-ui';
+  ctx.fillText(`${Math.max(0, t0)} ms`, 2, h - 2); ctx.textAlign = 'right'; ctx.fillText(`${F.t} ms`, w - 2, h - 2);
+  for (const [t, id] of F.raster) {
+    ctx.fillStyle = F.neurons[id][3] > 0 ? C.exc : C.inh;
+    ctx.fillRect((t - t0) / 500 * w, (id / n) * (h - 14), 2, Math.max(2, (h - 14) / n - 1));
+  }
+}
+
+// ---------- selected neuron ----------
+function drawBars() {
+  const [ctx, w, h] = fit($('bars'));
+  const d = F.detail;
+  const items = [['hub', d.hub, C.spike]]
+    .concat(d.pools.map(([from, v, th]) => [`←${from}`, v, th > 0 ? C.exc : th < 0 ? C.inh : '#484f58']))
+    .concat([['Efuel', d.efuel, C.blue], ['Cfuel', d.cfuel, C.lock]]);
+  const top = 6, bottom = 18, H = h - top - bottom, bw = w / items.length;
+  const yv = v => top + H * (1 - Math.min(1, v));
+  items.forEach(([label, v, col], i) => {
+    ctx.fillStyle = col; ctx.fillRect(i * bw + 4, yv(v), bw - 8, H * Math.min(1, v));
+    ctx.fillStyle = C.muted; ctx.font = '10px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(label, i * bw + bw / 2, h - 4);
+  });
+  ctx.strokeStyle = '#fff'; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(0, yv(d.thr)); ctx.lineTo(w, yv(d.thr)); ctx.stroke();
+  if (d.cap) { ctx.strokeStyle = C.muted; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(bw, yv(d.cap)); ctx.lineTo(bw * (1 + d.pools.length), yv(d.cap)); ctx.stroke(); }
+  ctx.setLineDash([]);
+  const kind = d.sensor ? 'sensor' : d.sign > 0 ? 'excitatory' : 'inhibitory';
+  $('selTitle').textContent = `${d.id} · ${kind} · ${d.state} · threshold ${d.thr} · window ${d.window === null ? 'off' : d.window + ' ms left'} · ${d.pools.length} lines · ${d.rate} Hz · local Rfuel ${d.rfuel}`;
+}
+function drawTrace() {
+  const [ctx, w, h] = fit($('trace'));
+  const tr = F.trace; if (!tr.length) return;
+  const t0 = tr[0][0], span = Math.max(10, tr[tr.length - 1][0] - t0);
+  const X = t => (t - t0) / span * w, Y = v => h - 4 - (h - 8) * Math.min(1, v);
+  for (const [t, id] of F.raster) if (id === F.selected && t >= t0) {
+    ctx.fillStyle = 'rgba(255,211,61,.25)'; ctx.fillRect(X(t), 0, 2, h);
+  }
+  const line = (k, col, dash) => {
+    ctx.strokeStyle = col; ctx.setLineDash(dash); ctx.lineWidth = 1.4; ctx.beginPath();
+    tr.forEach((p, i) => i ? ctx.lineTo(X(p[0]), Y(p[k])) : ctx.moveTo(X(p[0]), Y(p[k]))); ctx.stroke();
+  };
+  line(2, '#fff', [5, 4]); line(1, C.spike, []); ctx.setLineDash([]);
+}
+
+// ---------- drives ----------
+function drawDrives() {
+  const [ctx, w, h] = fit($('drives'));
+  const d = I.drives || []; if (d.length < 2) return;
+  const t0 = d[0][0], span = Math.max(1, d[d.length - 1][0] - t0);
+  const X = t => (t - t0) / span * w, Y = v => h - 4 - (h - 8) * Math.min(1, v / 2);
+  ctx.strokeStyle = C.line; ctx.beginPath(); ctx.moveTo(0, Y(1)); ctx.lineTo(w, Y(1)); ctx.stroke();
+  [[1, C.exc], [2, C.blue], [3, C.lock]].forEach(([k, col]) => {
+    ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath();
+    d.forEach((p, i) => i ? ctx.lineTo(X(p[0]), Y(p[k])) : ctx.moveTo(X(p[0]), Y(p[k]))); ctx.stroke();
+  });
+}
+
+// ---------- text panels ----------
+const chip = (id, color) => `<span class="chip" data-nid="${id}" ${color ? `style="border-color:${color}"` : ''}>${id}</span>`;
+function whyHtml(node, root) {
+  if (!node) return '<span class="sub">This neuron has not fired yet.</span>';
+  let head = root ? `${chip(node.id)} fired at ${node.t} ms` : '';
+  const items = (node.causes || []).map(c => {
+    if (c.outside) return `<li><span class="out">← outside input</span> +${c.charge.toFixed(2)} at ${c.t} ms</li>`;
+    const sign = c.charge >= 0 ? `<span class="plus">+${c.charge.toFixed(2)}</span>` : `<span class="minus">${c.charge.toFixed(2)}</span>`;
+    const more = c.forgotten ? ' <span class="sub">(older history not kept)</span>' : whyHtml(c, false);
+    return `<li>← ${chip(c.id)} ${sign} (sent at ${c.t} ms)${more}</li>`;
+  }).join('');
+  return head + (items ? `<ul class="why${root ? ' root' : ''}">${items}</ul>` : (root ? '<div class="sub">No inputs recorded.</div>' : ''));
+}
+function meter(label, v, max, text) {
+  const pct = Math.min(100, 100 * v / Math.max(1, max));
+  return `<div class="meter"><span>${label}</span><div class="track"><div class="fill" style="width:${pct}%"></div></div><span class="num">${text}</span></div>`;
+}
+function renderPanels() {
+  const sec = Math.floor(F.t / 1000), pad2 = v => String(v).padStart(2, '0');
+  $('t').textContent = `${pad2(Math.floor(sec / 3600))}:${pad2(Math.floor(sec / 60) % 60)}:${pad2(sec % 60)}`;
+  $('t').title = `${F.t} ms`;
+  $('nlines').textContent = F.lines.length;
+  $('nawake').textContent = `${F.neurons.filter(n => n[7]).length}/${F.neurons.length}`;
+  $('pause').textContent = F.paused ? 'Play' : 'Pause';
+  const sp = $('speed');
+  if (!sp.options.length) F.speeds.forEach(v => sp.add(new Option(v, v)));
+  if (document.activeElement !== sp) sp.value = F.speed;
+
+  if (!I.alarms) return;
+  $('alarms').innerHTML = I.alarms.map(([lvl, msg]) => `<div class="alarm ${lvl}">${msg}</div>`).join('');
+
+  const cap = I.capacity;
+  $('capacity').innerHTML =
+    meter('Awake neurons', cap.awake, cap.neurons, `${cap.awake}/${cap.neurons}`) +
+    meter('Line space used', cap.lines, cap.line_slots, `${cap.lines}/${cap.line_slots}`) +
+    meter('Thoughts at once', cap.groups, cap.max_groups, `${cap.groups}/${cap.max_groups}`) +
+    `<div class="row sub" style="margin-top:6px">Since start: <b style="color:var(--exc)">${F.counts.grow || 0}</b> lines grown ·
+      <b style="color:var(--inh)">${F.counts.prune || 0}</b> pruned · <b style="color:var(--lock)">${F.counts.lock || 0}</b> locked ·
+      net change <b>${(F.counts.grow || 0) - (F.counts.prune || 0)}</b></div>`;
+  $('layoutName').textContent = F.layout === 'grid' ? '(2D square, grid)' : '(2D square, random)';
+
+  groupOf = new Map();
+  I.groups.forEach((g, i) => g.members.forEach(m => groupOf.set(m, GROUP_COLORS[i % GROUP_COLORS.length])));
+  $('groups').innerHTML = I.groups.length
+    ? I.groups.map((g, i) => `<div class="row"><b style="color:${GROUP_COLORS[i % GROUP_COLORS.length]}">${g.name}</b> ${g.members.map(m => chip(m)).join('')}</div>`).join('')
+    : '<div class="sub">No group is firing together right now.</div>';
+  $('chains').innerHTML = I.chains.length
+    ? I.chains.map(c => `<div class="row">${c.map(id => chip(id)).join(' → ')}</div>`).join('')
+    : '<div class="sub">No cause-and-effect chains in the last 60 ms.</div>';
+
+  $('whyTitle').textContent = `neuron ${F.selected}, last spike`;
+  $('why').innerHTML = whyHtml(I.why, true);
+
+  const L = I.learned;
+  const lineRow = ([s, d, v]) => `<div class="row">${chip(s)}→${chip(d)} <span class="${v > 0 ? 'plus' : 'minus'}">${v > 0 ? '+' : ''}${v.toFixed(3)}</span></div>`;
+  $('up').innerHTML = L.up.map(lineRow).join('') || '<div class="sub">nothing</div>';
+  $('down').innerHTML = L.down.map(lineRow).join('') || '<div class="sub">nothing</div>';
+  $('events').innerHTML = L.events.length
+    ? L.events.slice().reverse().map(([t, kind, s, d]) => `<div class="row"><span class="sub">${t} ms</span> ${kind} ${chip(s)}→${chip(d)}</div>`).join('')
+    : '<div class="sub">none</div>';
+}
+
+// ---------- main loop ----------
+function frame(now) {
+  if (F) {
+    drawMap(); drawRaster(); drawBars(); drawTrace(); drawDrives();
+    if (now - lastHtml > 250) { renderPanels(); lastHtml = now; }
+  }
+  requestAnimationFrame(frame);
+}
+connect();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
