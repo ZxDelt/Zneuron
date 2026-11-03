@@ -57,7 +57,7 @@ def main():
     ap.add_argument("--warmup", type=int, default=0, help="ms to simulate before showing")
     ap.add_argument("--speed", type=float, default=1, help="× real time at start (0.03, 0.1, 0.3, 1, 3, 10, ... 10000)")
     ap.add_argument("--reward-only", action="store_true",
-                    help="resting Lfuel 0: learning only sticks when rewarded (👍/👎, flowers, rocks)")
+                    help="resting Lfuel 0: learning only sticks when rewarded (thumbs up/down, flowers, rocks)")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--no-browser", action="store_true", help="don't open the browser automatically")
     args = ap.parse_args()
