@@ -14,9 +14,9 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-from superneuron import saving, world as W
-from superneuron.params import Params
-from superneuron.teacher import Teacher
+from zneuron import saving, world as W
+from zneuron.params import Params
+from zneuron.teacher import Teacher
 
 BRAINS = Path(__file__).parent / "brains"
 

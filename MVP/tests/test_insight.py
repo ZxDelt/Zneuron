@@ -4,9 +4,9 @@ import urllib.error
 import urllib.request
 
 from run_live import sensor_pattern
-from superneuron import insight
-from superneuron.network import Network
-from superneuron.server import Sim, serve
+from zneuron import insight
+from zneuron.network import Network
+from zneuron.server import Sim, serve
 
 
 def chain_net():
@@ -86,7 +86,7 @@ def test_server_streams_frames_and_takes_commands():
     try:
         page = urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=5).read()
         assert b"dockview-core.min.js" in page
-        assert b"SuperNeuron Live" in urllib.request.urlopen(f"http://127.0.0.1:{port}/classic", timeout=5).read()
+        assert b"Zneuron Live" in urllib.request.urlopen(f"http://127.0.0.1:{port}/classic", timeout=5).read()
         js = urllib.request.urlopen(f"http://127.0.0.1:{port}/js/brain3d.js", timeout=5)
         assert js.headers["Content-Type"].startswith("text/javascript")
         try:                                   # nothing outside web/ is served

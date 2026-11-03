@@ -25,7 +25,7 @@ def main():
     a = ap.parse_args()
     over = json.loads(a.over)
     if over:
-        from superneuron import params as PP
+        from zneuron import params as PP
         from . import brains as B
         base = PP.v2
         B.v2 = lambda **kw: base(**{**over, **kw})

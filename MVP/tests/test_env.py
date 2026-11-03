@@ -4,7 +4,7 @@ import warnings
 import matplotlib
 import numpy
 
-from superneuron import SPEC_PATH
+from zneuron import SPEC_PATH
 
 
 def test_libraries_import():

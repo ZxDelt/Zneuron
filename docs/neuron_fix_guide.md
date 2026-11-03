@@ -1,7 +1,7 @@
-# SuperNeuron fix guide: the 10 problems, their root causes, where to change them
+# Zneuron fix guide: the 10 problems, their root causes, where to change them
 
-Written 2026-11-02 after the fair bee test (Hub SuperNeuron vs textbook LIF, 18 tests: LIF won 5, Hub won 2, 11 ties).
-Code links point at `MVP/superneuron/engine.py` (the compiled neuron) and `MVP/superneuron/params.py` (its numbers).
+Written 2026-11-02 after the fair bee test (Hub Zneuron vs textbook LIF, 18 tests: LIF won 5, Hub won 2, 11 ties).
+Code links point at `MVP/zneuron/engine.py` (the compiled neuron) and `MVP/zneuron/params.py` (its numbers).
 Spec IDs (#20, F1, …) are the items in `neuron_spec.html`: change the spec there first, then the code.
 
 ---
@@ -36,13 +36,13 @@ helpers keep shrinking lines faster than learning can grow them.**
 **Root causes (three stacked losses):**
 - **Fatigue (#20):** every spike multiplies the line's energy by 0.7, and it recovers with a 50 ms time constant.
   A sensor firing at 80 Hz settles at **about 49% energy**, so it delivers half its charge.
-  Code: [engine.py:445](../MVP/superneuron/engine.py) (charge = thickness × energy),
-  [engine.py:448](../MVP/superneuron/engine.py) (energy × 0.7), `fatigue_mult`/`fatigue_tau_ms` in [params.py:25-26](../MVP/superneuron/params.py).
-- **Cup chunks (F1):** a cup tips only whole chunks of 1/lines ([engine.py:548-553](../MVP/superneuron/engine.py)).
+  Code: [engine.py:445](../MVP/zneuron/engine.py) (charge = thickness × energy),
+  [engine.py:448](../MVP/zneuron/engine.py) (energy × 0.7), `fatigue_mult`/`fatigue_tau_ms` in [params.py:25-26](../MVP/zneuron/params.py).
+- **Cup chunks (F1):** a cup tips only whole chunks of 1/lines ([engine.py:548-553](../MVP/zneuron/engine.py)).
   The leftover waits in the cup and dies at the 20 ms dump (problem 2). Fewer lines means bigger chunks and more charge stuck.
   The chunk size also counts *output* lines, so a neuron that sends a lot ends up listening with smaller chunks.
 - **Homeostasis thinning (#31):** any neuron above 2 Hz has **all its input lines × 0.99 every 100 ms, about −10% per
-  second** ([engine.py:647-652](../MVP/superneuron/engine.py), `homeo_thin` in [params.py:51](../MVP/superneuron/params.py)).
+  second** ([engine.py:647-652](../MVP/zneuron/engine.py), `homeo_thin` in [params.py:51](../MVP/zneuron/params.py)).
   Ten seconds of being useful shrinks its inputs to about 35%.
 
 **My advice (in order):**
@@ -66,7 +66,7 @@ and Yellow's ×1 deliveries come up from 1.8 toward LIF's 14.2.
 can fire. Yours has already emptied the bucket at 20 ms, so the first input never counted.
 
 **Root cause:** a hard cliff instead of a slope. The window (#5) starts at the first input and erases the hub and every cup
-at 20 ms ([engine.py:557-562](../MVP/superneuron/engine.py), `window_ms` in [params.py:18](../MVP/superneuron/params.py)).
+at 20 ms ([engine.py:557-562](../MVP/zneuron/engine.py), `window_ms` in [params.py:18](../MVP/zneuron/params.py)).
 The neuron can only add up inputs that land inside one 20 ms box, and the box starts at an arbitrary moment.
 
 **My advice:**
@@ -89,8 +89,8 @@ The neuron can only add up inputs that land inside one 20 ms box, and the box st
 hundreds. To reach many inputs you must stack layers, and every layer loses signal (problem 1).
 
 **Root cause:** each line owns a cup and a slot, and the memory is sized by a fixed `MAXL = 8`
-([engine.py:17](../MVP/superneuron/engine.py)), checked in `connect` ([engine.py:282](../MVP/superneuron/engine.py)),
-`max_lines` in [params.py:24](../MVP/superneuron/params.py), spec R14 / #21.
+([engine.py:17](../MVP/zneuron/engine.py)), checked in `connect` ([engine.py:282](../MVP/zneuron/engine.py)),
+`max_lines` in [params.py:24](../MVP/zneuron/params.py), spec R14 / #21.
 
 **My advice:**
 1. **Separate inputs from outputs:** limit inputs (cups) only. Outputs are just "send the spike there", so they don't need
@@ -114,10 +114,10 @@ deliveries at ×1 should rise.
 
 **Root causes:**
 - Prune rule: remove if unused for 10 s **and** thinner than 0.3, or thinner than 0.1 at any time
-  ([engine.py:701-702](../MVP/superneuron/engine.py), `unused_ms`/`unused_thin` in [params.py:39-40](../MVP/superneuron/params.py), spec #22).
+  ([engine.py:701-702](../MVP/zneuron/engine.py), `unused_ms`/`unused_thin` in [params.py:39-40](../MVP/zneuron/params.py), spec #22).
   "Unused" measures **time**, not **usefulness**.
 - Homeostasis thinning (problem 1) pushes lines below the 0.3 line, which then makes them prunable.
-- Growth (#21) picks partners from the **nearest 50 neurons in space** ([engine.py:655-683](../MVP/superneuron/engine.py),
+- Growth (#21) picks partners from the **nearest 50 neurons in space** ([engine.py:655-683](../MVP/zneuron/engine.py),
   `compute_nearest`). In the bee's grid layout, space has nothing to do with layers, so new lines go eye→eye or Kenyon→Kenyon:
   useless.
 
@@ -140,13 +140,13 @@ the right layers.
 
 **Picture it:** a motor neuron that should fire 30 Hz while walking gets its threshold raised and its inputs shrunk until it
 goes deaf. We had to exempt motors and sensors by hand
-([engine.py:633](../MVP/superneuron/engine.py), the `S.sensor[i] or S.motor[i]` skip).
+([engine.py:633](../MVP/zneuron/engine.py), the `S.sensor[i] or S.motor[i]` skip).
 
 **Root causes:**
-- One fixed target for all: `target_hz = 2.0` ([params.py:48](../MVP/superneuron/params.py), #31).
-- Two strong push-backs at once: threshold up (+0.001 per check, [engine.py:645-648](../MVP/superneuron/engine.py))
-  **plus** input thinning ×0.99 per check (about −10%/s, [engine.py:649-652](../MVP/superneuron/engine.py)), plus the glia
-  calming threshold ×Rfuel up to ×2 ([engine.py:636-639](../MVP/superneuron/engine.py), #34).
+- One fixed target for all: `target_hz = 2.0` ([params.py:48](../MVP/zneuron/params.py), #31).
+- Two strong push-backs at once: threshold up (+0.001 per check, [engine.py:645-648](../MVP/zneuron/engine.py))
+  **plus** input thinning ×0.99 per check (about −10%/s, [engine.py:649-652](../MVP/zneuron/engine.py)), plus the glia
+  calming threshold ×Rfuel up to ×2 ([engine.py:636-639](../MVP/zneuron/engine.py), #34).
   Three brakes on the same pedal.
 - It runs every 100 ms, far faster than learning (rewards add about 0.01 per event).
 
@@ -171,12 +171,12 @@ gets drowned out. With Lfuel off it's correct but too weak and too short-sighted
 then the memory of "which lines did it" is about 0.0003 of its size. The reward reaches almost nothing that mattered.
 
 **Root causes:**
-- **Lfuel = 1 at rest (#30 v1):** every STDP change is applied immediately ([engine.py:348](../MVP/superneuron/engine.py)),
+- **Lfuel = 1 at rest (#30 v1):** every STDP change is applied immediately ([engine.py:348](../MVP/zneuron/engine.py)),
   so random co-firing rewires the brain regardless of reward. We switched to Lfuel 0 (proposed, not confirmed).
-- **Credit-assignment gap:** eligibility time constant 250 ms ([params.py:75](../MVP/superneuron/params.py)) versus
+- **Credit-assignment gap:** eligibility time constant 250 ms ([params.py:75](../MVP/zneuron/params.py)) versus
   seconds between action and reward.
 - **Reward is too small and gets erased:** reward adds about eligibility × r ≈ 0.01 per line
-  ([engine.py:363-391](../MVP/superneuron/engine.py)), while homeostasis removes about 10% per second (problem 5).
+  ([engine.py:363-391](../MVP/zneuron/engine.py)), while homeostasis removes about 10% per second (problem 5).
 - Without targeting, every eligible line in the brain moves for every reward, a "smear".
 
 **My advice (this is where you can beat every standard neuron):**
@@ -202,7 +202,7 @@ only 10 matches per test (`--seeds` in [compare.py](../MVP/bees/compare.py)).
 
 **My advice:**
 1. Fix problems 1–6 first: a brain that actually learns produces steadier results than one that wanders.
-2. Fade babbling as control grows (the robot already does this: `Agent._fade_babbling` in `MVP/superneuron/world.py`).
+2. Fade babbling as control grows (the robot already does this: `Agent._fade_babbling` in `MVP/zneuron/world.py`).
 3. Run 30 matches per test for final claims (the app's "matches" box). The paired test stays valid.
 
 ---
@@ -224,9 +224,9 @@ while they do. Your sparse ideas (Kenyon sparsity, Efuel cost) are the right too
 **In one sentence:** your neuron does more work per tick, and some of it touches every line in the brain.
 
 **Root causes:**
-- `apply_reward` loops over **all lines** for every reward ([engine.py:363](../MVP/superneuron/engine.py)), and rewards
+- `apply_reward` loops over **all lines** for every reward ([engine.py:363](../MVP/zneuron/engine.py)), and rewards
   arrive every 200 ms (shaping).
-- `glia_check` loops over all lines every 100 ms for pruning and locking ([engine.py:687-711](../MVP/superneuron/engine.py)).
+- `glia_check` loops over all lines every 100 ms for pruning and locking ([engine.py:687-711](../MVP/zneuron/engine.py)).
 - Python runs each 20 ms body step (`bees/brains.py` `Match.step`), with a Numba call per bee per step.
 
 **My advice:**

@@ -1,10 +1,10 @@
-"""Fast research fights: SuperNeuron variants vs LIF and ALIF, all conditions x all start-weight levels, in parallel.
+"""Fast research fights: Zneuron variants vs LIF and ALIF, all conditions x all start-weight levels, in parallel.
 
     .venv/Scripts/python.exe -m bees.research                         # current v2
     .venv/Scripts/python.exe -m bees.research --over '{"leak_tau_ms": 30}' --name leak30
     .venv/Scripts/python.exe -m bees.research --minutes 10 --seeds 8
 
-Only SuperNeuron's own neuron parameters (params.v2 overrides) change between variants; wiring, senses, rewards, the
+Only Zneuron's own neuron parameters (params.v2 overrides) change between variants; wiring, senses, rewards, the
 learning rule and the rivals stay fixed, so a better score means a better neuron. Prints a scoreboard: for every
 condition x weight level, v2's mean deliveries vs each rival and the paired-test winner. Appends to
 bees/results/research.jsonl so every variant ever tried is kept.
@@ -31,7 +31,7 @@ def set_rivals(r):
 def one(cond, seed, minutes, scale, over, rivals=None):
     if rivals:
         set_rivals(rivals)
-    from superneuron import params as PP
+    from zneuron import params as PP
     from . import brains as B
     if over:
         base = PP.v2

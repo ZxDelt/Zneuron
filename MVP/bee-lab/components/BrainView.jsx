@@ -30,7 +30,7 @@ function layout(meta, W, H) {
 }
 
 export default function BrainView({ bee, kind, meta, version }) {
-  // neurons in the "Grown" block are free spots until SuperNeuron v2 grows a neuron there
+  // neurons in the "Grown" block are free spots until Zneuron v2 grows a neuron there
   const wrap = useRef(null), cvs = useRef(null);
   const data = useRef({ bee: null, lines: null, sign: null, start: null, version: null });
 

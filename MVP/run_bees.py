@@ -1,4 +1,4 @@
-"""Bee lab: yellow bee (Hub SuperNeuron) vs pink bee (textbook LIF) in one shared arena, live.
+"""Bee lab: yellow bee (Hub Zneuron) vs pink bee (textbook LIF) in one shared arena, live.
 
     .venv/Scripts/python.exe run_bees.py                        (simulation server on :8766)
     cd bee-lab && npm run dev                                   (the app on http://localhost:3000)

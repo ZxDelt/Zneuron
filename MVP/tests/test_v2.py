@@ -1,11 +1,11 @@
-"""SuperNeuron v2: leak, no line limit, mini-buckets with the choke rule (single-neuron XOR), slow memory,
+"""Zneuron v2: leak, no line limit, mini-buckets with the choke rule (single-neuron XOR), slow memory,
 pruning only weak lines. v1 behaviour is covered by the older tests (all switches off by default)."""
 
 import numpy as np
 import pytest
 
-from superneuron.network import Network
-from superneuron.params import Params, v2
+from zneuron.network import Network
+from zneuron.params import Params, v2
 
 
 def fired(net, nid, since):

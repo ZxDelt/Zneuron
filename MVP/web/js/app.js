@@ -4,7 +4,7 @@ import { GROUP_COLORS } from './util.js';
 
 const { createDockview, themeAbyss } = window['dockview-core'];
 const $ = id => document.getElementById(id);
-const LAYOUT_KEY = 'superneuron.layout.v2';
+const LAYOUT_KEY = 'zneuron.layout.v2';
 
 const app = {
   F: null, I: {}, groupOf: new Map(), views: new Map(),

@@ -1,5 +1,5 @@
 """LIF and ALIF bee brains on the GPU: bees/lif.py and bees/alif.py compiled as CUDA device code (same source),
-plus one kernel each to run many brains and to give them rewards. See superneuron/gpu.py for the Hub brains."""
+plus one kernel each to run many brains and to give them rewards. See zneuron/gpu.py for the Hub brains."""
 
 import re
 import types
@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from numba import cuda
 
-from superneuron.gpu import THREADS, _HELPERS, device_engine
+from zneuron.gpu import THREADS, _HELPERS, device_engine
 
 from . import alif as A
 from . import lif as L
@@ -51,7 +51,7 @@ def reward_kernel({args}, r, nb):
 def device_lif():
     if "lif" not in _NS:
         src = _to_device_src(Path(L.__file__).read_text(encoding="utf-8"))
-        src = src.replace("from superneuron.engine import rand01", "rand01 = _ENGINE['rand01']")
+        src = src.replace("from zneuron.engine import rand01", "rand01 = _ENGINE['rand01']")
         ns = {"__name__": "bees.lif_gpu", "_ENGINE": device_engine()}
         exec(compile(src, "lif_gpu", "exec"), ns)
         exec(compile(_kernels(L.LIFState, "run(S, ticks)"), "lif_gpu_kernels", "exec"), ns)
@@ -76,7 +76,7 @@ def device_alif():
 
 
 class GPUPointBatch:
-    """Many LIF or ALIF brains (same wiring shape) on the GPU. Same interface as superneuron.gpu.GPUBatch."""
+    """Many LIF or ALIF brains (same wiring shape) on the GPU. Same interface as zneuron.gpu.GPUBatch."""
 
     def __init__(self, states, kind):
         self.dev = device_lif() if kind == "lif" else device_alif()
@@ -108,7 +108,7 @@ class GPUPointBatch:
             self.arrays[self.idx[f]] = cuda.to_device(np.stack([getattr(S, f) for S in self.states]))
 
 
-# ---------- one thread per neuron (one block per brain), like superneuron/gpu_par.py ----------
+# ---------- one thread per neuron (one block per brain), like zneuron/gpu_par.py ----------
 
 _PAR = '''
 @cuda.jit(device=True)

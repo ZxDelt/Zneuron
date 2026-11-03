@@ -10,8 +10,8 @@ import sys
 from concurrent.futures import ProcessPoolExecutor
 
 from run_live import sensor_pattern
-from superneuron.network import Network
-from superneuron.params import Params
+from zneuron.network import Network
+from zneuron.params import Params
 
 SECONDS = 90
 

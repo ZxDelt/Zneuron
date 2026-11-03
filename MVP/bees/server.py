@@ -24,7 +24,7 @@ from .brains import DEFAULT_SCALE, FREE_SPOTS, MODELS, SCALES, Match
 from .compare import OUT
 
 SPEEDS = [0.25, 0.5, 1, 2, 5, 10, 20, 50, 100, 1000]
-GROUPS = dict(F.GROUPS, new=(F.N, F.N + FREE_SPOTS))        # "new": spots where SuperNeuron v2 grows neurons
+GROUPS = dict(F.GROUPS, new=(F.N, F.N + FREE_SPOTS))        # "new": spots where Zneuron v2 grows neurons
 
 
 def group_of(i):

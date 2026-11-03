@@ -1,11 +1,11 @@
-"""SuperNeuron v2 vs v1 vs textbook LIF vs ALIF, sharing one arena, in every condition, at every shared
+"""Zneuron v2 vs v1 vs textbook LIF vs ALIF, sharing one arena, in every condition, at every shared
 start-weight level, many seeds each, in parallel.
 
     .venv/Scripts/python.exe -m bees.compare                      # 6 conditions x 3 levels x 10 seeds x 60 brain-min
     .venv/Scripts/python.exe -m bees.compare --minutes 10 --seeds 4 --conditions basic decoys --scales 2
 
 All bees of a match get the same wiring, the same start weights and the same arena (they share it). Because each
-seed is one match, the test is paired: for every metric, SuperNeuron v2's per-seed difference to each other bee is
+seed is one match, the test is paired: for every metric, Zneuron v2's per-seed difference to each other bee is
 tested with an exact sign-flip permutation test. Writes bees/results/compare.json and prints one JSON progress line per match.
 """
 
@@ -100,7 +100,7 @@ def perm_test(a, b, n=5000):
 
 
 def summarize(runs, conditions, scale, models):
-    """Per condition and metric: each bee's mean/sd, and SuperNeuron v2 vs each other bee (paired test, winner)."""
+    """Per condition and metric: each bee's mean/sd, and Zneuron v2 vs each other bee (paired test, winner)."""
     from .arena import CONDITIONS
     out = []
     for cond in conditions:

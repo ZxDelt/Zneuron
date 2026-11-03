@@ -102,7 +102,7 @@
 </header>
 <main>
   <p class="intro">Write under each point what the neuron should do. Link <code>neuron_spec.json</code> in the
-    SuperNeuron folder once: after that every edit autosaves to it and the page loads it on open
+    Zneuron folder once: after that every edit autosaves to it and the page loads it on open
     (Chrome may ask for one click to reconnect, or offer "Allow on every visit").
     Highlighted items are the priority gaps (stability and learning).</p>
   <div id="root"></div>
@@ -182,27 +182,27 @@ const GROUPS = [
     ['F7', '"Nearby neuron" is undefined', '', 'Growth (#21) and glia groups (#34) need it; neurons have no positions yet.'],
     ['F8', 'Order of events inside a tick', '', 'Without a fixed order, results depend on which neuron updates first.'],
   ]},
-  { id: 'v2', title: 'SuperNeuron v2 proposals (built, waiting for you)', items: [
-    ['V1', "Small, slow leak instead of the 20 ms dump", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V2', "Fire threshold 0.3", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V3', "No 8-line limit", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V4', "Softer fatigue", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V5', "Gentle homeostasis", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V6', "Glia calm only fast neurons", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V7', "Each neuron its own target rate", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V8', "Prune only weak lines", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V9', "Trial lines get 3 s", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V10', "Room to grow neurons", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V11', "Mini-buckets in the bucket (dendrites)", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V12', "Choke rule", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V13', "Smart growth", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V14', "Branch credit", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V15', "Lock on reward", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V16', "Grow by teamwork, as needed", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V17', "Two-speed learning memory (shared rule)", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V18', "Reward surprise (shared rule)", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V19', "Faster rewards", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
-    ['V20', "Reward-guided growth (structural learning)", 'missing', 'Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.'],
+  { id: 'v2', title: 'Zneuron v2 proposals (built, waiting for you)', items: [
+    ['V1', "Small, slow leak instead of the 20 ms dump", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V2', "Fire threshold 0.3", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V3', "No 8-line limit", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V4', "Softer fatigue", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V5', "Gentle homeostasis", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V6', "Glia calm only fast neurons", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V7', "Each neuron its own target rate", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V8', "Prune only weak lines", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V9', "Trial lines get 3 s", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V10', "Room to grow neurons", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V11', "Mini-buckets in the bucket (dendrites)", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V12', "Choke rule", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V13', "Smart growth", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V14', "Branch credit", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V15', "Lock on reward", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V16', "Grow by teamwork, as needed", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V17', "Two-speed learning memory (shared rule)", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V18', "Reward surprise (shared rule)", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V19', "Faster rewards", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
+    ['V20', "Reward-guided growth (structural learning)", 'missing', 'Built in Zneuron v2 (params.v2). Check and Submit, or edit.'],
   ]},
 ];
 

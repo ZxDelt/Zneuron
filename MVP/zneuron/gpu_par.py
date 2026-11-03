@@ -1,4 +1,4 @@
-"""SuperNeuron on the GPU, one thread per neuron (one thread block per brain).
+"""Zneuron on the GPU, one thread per neuron (one thread block per brain).
 
 The CPU engine (engine.py) is event-driven: only awake neurons are touched and spikes travel through a queue. That
 is fast on a CPU and slow on a GPU (gpu.py runs it one brain per thread). Here every neuron ticks every ms in its own

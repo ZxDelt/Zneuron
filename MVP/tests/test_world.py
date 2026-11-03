@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from superneuron import saving, world as W
-from superneuron.network import Network
+from zneuron import saving, world as W
+from zneuron.network import Network
 
 
 def brain(seed=1):
@@ -85,7 +85,7 @@ def test_reflex_arcs_let_senses_reach_motors():
 
 
 def test_teacher_runs_lessons():
-    from superneuron.teacher import Teacher
+    from zneuron.teacher import Teacher
     net = W.make_brain(seed=4, neurons=300, capacity=343)
     teacher = Teacher(W.Agent(net, W.World(4)), seed=4)
     for _ in range(5):

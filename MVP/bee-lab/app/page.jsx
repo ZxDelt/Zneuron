@@ -56,7 +56,7 @@ export default function Home() {
       <header className="topbar">
         <div className="brand"><b>BEE</b><i>LAB</i></div>
         <span className="dim tagline">
-          <span className="y">SuperNeuron v2</span> vs v1, LIF, ALIF · one arena · fair test
+          <span className="y">Zneuron v2</span> vs v1, LIF, ALIF · one arena · fair test
         </span>
         <span className="sep" />
         <div className="group">

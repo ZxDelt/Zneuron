@@ -13,9 +13,9 @@ import argparse
 import webbrowser
 from pathlib import Path
 
-from superneuron import world
-from superneuron.network import Network
-from superneuron.server import Sim, serve
+from zneuron import world
+from zneuron.network import Network
+from zneuron.server import Sim, serve
 
 
 def sensor_pattern(every_ms, gap_ms):
@@ -84,7 +84,7 @@ def main():
     sim = Sim(net, stimulus, speed=args.speed, agent=agent, save_dir=Path(__file__).parent / "brains")
     server = serve(sim, port=args.port)
     url = f"http://127.0.0.1:{args.port}"
-    print(f"SuperNeuron live at {url}  (Ctrl+C to stop)")
+    print(f"Zneuron live at {url}  (Ctrl+C to stop)")
     if not args.no_browser:
         webbrowser.open(url)
     try:

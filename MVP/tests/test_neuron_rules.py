@@ -2,7 +2,7 @@
 
 import pytest
 
-from superneuron.network import Network
+from zneuron.network import Network
 
 
 def make(n=3):

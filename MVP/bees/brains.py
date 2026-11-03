@@ -1,8 +1,8 @@
 """The bees: same fly wiring, same body, same learning rule; only the neuron model differs.
 
-- hub2: SuperNeuron v2 (params.v2: leak, threshold 0.3, no line limit, mini-buckets with the choke rule,
+- hub2: Zneuron v2 (params.v2: leak, threshold 0.3, no line limit, mini-buckets with the choke rule,
         gentle homeostasis, pruning only weak lines, lock on reward, grow by teamwork, free spots to grow neurons)
-- hub1: SuperNeuron v1 (spec defaults), for reference
+- hub1: Zneuron v1 (spec defaults), for reference
 - lif:  textbook leaky integrate-and-fire (bees/lif.py)
 - alif: adaptive LIF, the strongest standard spiking neuron (bees/alif.py)
 
@@ -18,9 +18,9 @@ import time
 
 import numpy as np
 
-from superneuron import engine as E
-from superneuron.network import Network
-from superneuron.params import Params, v2
+from zneuron import engine as E
+from zneuron.network import Network
+from zneuron.params import Params, v2
 
 from . import arena as A
 from . import flybrain as F
@@ -30,8 +30,8 @@ from .lif import LIFBrain
 # babbling (spontaneous motor firing, #32), spikes per ms per motor neuron; grab is rarer so a grab means something
 BABBLE = {"left": 0.004, "right": 0.004, "forward": 0.006, "grab": 0.0015}
 MODELS = {
-    "hub2": dict(label="SuperNeuron v2", color="yellow"),
-    "hub1": dict(label="SuperNeuron v1", color="violet"),
+    "hub2": dict(label="Zneuron v2", color="yellow"),
+    "hub1": dict(label="Zneuron v1", color="violet"),
     "lif": dict(label="LIF (textbook)", color="pink"),
     "alif": dict(label="ALIF (adaptive)", color="orange"),
 }

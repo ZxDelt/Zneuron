@@ -1,4 +1,4 @@
-# SuperNeuron MVP
+# Zneuron MVP
 
 Hub Neuron brain built from `../neuron_spec.json` (edit it with `../neuron_spec.html`), living in a ZX-style robot
 in an endless 3D world. Work is steered through `../NEXT.md`.
@@ -18,14 +18,14 @@ Opens http://127.0.0.1:8765 in your browser. Ctrl+C in the terminal stops it. Th
 takes ~30–60 s while Numba compiles the engine (cached afterwards).
 
 ## Layout
-- `superneuron/engine.py` — every neuron rule, compiled with Numba; all state in numpy arrays.
-- `superneuron/network.py` — builds the brain (cube / grid / random), friendly views (`net.neurons[i].hub`, ...).
-- `superneuron/params.py` — every number from the spec, in one place.
-- `superneuron/world.py` — world, robot body, senses, the `Agent` that couples brain and body, `make_brain()`.
-- `superneuron/teacher.py` — word lessons: says "left"/"right", rewards the matching head turn.
+- `zneuron/engine.py` — every neuron rule, compiled with Numba; all state in numpy arrays.
+- `zneuron/network.py` — builds the brain (cube / grid / random), friendly views (`net.neurons[i].hub`, ...).
+- `zneuron/params.py` — every number from the spec, in one place.
+- `zneuron/world.py` — world, robot body, senses, the `Agent` that couples brain and body, `make_brain()`.
+- `zneuron/teacher.py` — word lessons: says "left"/"right", rewards the matching head turn.
 - `train.py` — trains many brains at once (one per CPU core), each in its own world.
-- `superneuron/insight.py` — why a neuron fired, thinking groups, chains, learning, alarms, brain-state teller.
-- `superneuron/server.py`, `saving.py` — live stream to the page, chat, rewards, save/load brains (`brains/`).
+- `zneuron/insight.py` — why a neuron fired, thinking groups, chains, learning, alarms, brain-state teller.
+- `zneuron/server.py`, `saving.py` — live stream to the page, chat, rewards, save/load brains (`brains/`).
 - `web/app.html`, `web/js/` — the app (Three.js 3D + dockview panels, kept offline in `web/vendor/`).
 - `bees/` — bee lab: fly wiring, arena, LIF baseline, comparison runner, live server; `bee-lab/` — its Next.js app.
 - `tests/` — tests (incl. `test_v2.py`: single-neuron XOR; `test_gpu.py`, skipped without CUDA): one per neuron rule, engine features, world/body, teacher, server.
@@ -62,11 +62,11 @@ Unity-style panels: drag tabs, resize, **F** or "⛶ Panel" = full-screen the ac
   **Result:** rewarded brains 58% -> **64%** correct over 90 brain-minutes (best brain 100%); no-reward control flat at
   ~53%. Difference +11.5 points, p ~ 0.06 with 15+15 brains — promising, not yet proven.
 
-## Bee lab: SuperNeuron v2 vs v1 vs LIF vs ALIF
+## Bee lab: Zneuron v2 vs v1 vs LIF vs ALIF
 Bees share one 2D arena and compete for the same cyan squares, carrying them to the magenta spot. All have the same
 mini fly brain (84 senses -> 147 Kenyon cells -> 84 MBONs -> 16 motor neurons). Only the neuron differs:
-**v2** = SuperNeuron v2 (`params.v2()`: slow leak, threshold 0.3, no line limit, mini-buckets with the choke rule,
-gentle brakes, reward-guided growth, ...), **v1** = the old SuperNeuron, **LIF** = textbook, **ALIF** = adaptive LIF
+**v2** = Zneuron v2 (`params.v2()`: slow leak, threshold 0.3, no line limit, mini-buckets with the choke rule,
+gentle brakes, reward-guided growth, ...), **v1** = the old Zneuron, **LIF** = textbook, **ALIF** = adaptive LIF
 (Bellec 2018/2020). Fair: same wiring and start weights (tested at x1, x2, x3), same senses, rewards and learning rule
 (reward-gated STDP with a 250 ms + 2 s memory, driven by reward surprise), starts rotate, paired tests per match.
 ```bash
@@ -83,16 +83,16 @@ Research 2026-11-02 (`bees/results/research.jsonl` keeps every variant tried):
   (~56% -> 61%) and is **ahead of LIF and ALIF in all 18 tests** (6 conditions x 3 weight levels), 16 matches each:
   avg squares v2 8.7, LIF 5.0, ALIF 4.0; significant wins 11/18 vs LIF and 13/18 vs ALIF; **0 losses**.
 - Control: ALIF given the same growth rule only goes 3.2 -> 3.8 and does not learn to steer; v2 still ahead 18/18.
-  The win comes from the growth rule *combined with* the SuperNeuron (mini-buckets, branch credit, leak, fuels).
+  The win comes from the growth rule *combined with* the Zneuron (mini-buckets, branch credit, leak, fuels).
 - Tried and dropped: stronger growth (8 lines/reward), protecting rewarded lines from thinning, "how close to firing"
   eligibility, no line thinning / glia only at 50 Hz (ran away to ~38 Hz everywhere).
 App: the arena on the left half; on the right two panels, each with a bee picker and the tabs
 Brain (live wiring and firing), Activity, Senses, Wiring, Score, Race, Verdict, Conditions.
 
 ## GPU
-- `superneuron/gpu.py`: engine.py compiled for CUDA, one brain per GPU thread. Spike-exact with the CPU, but slow
+- `zneuron/gpu.py`: engine.py compiled for CUDA, one brain per GPU thread. Spike-exact with the CPU, but slow
   (a GPU thread is weak at branchy code).
-- `superneuron/gpu_par.py`, `bees/gpu_bees.py`: one GPU thread per neuron, one block per brain, pull delivery, serial
+- `zneuron/gpu_par.py`, `bees/gpu_bees.py`: one GPU thread per neuron, one block per brain, pull delivery, serial
   step for growth/pruning. Same averages as the CPU, not spike for spike. The CPU keeps the sleep method.
 - Speed on the RTX 4060 laptop (bee brains, combined): v2 ~390x, LIF/ALIF ~4000x. One CPU core: v2 ~19x.
 - `bees/gpu_world.py`, `bees/gpu_match.py`: arenas and bodies on the GPU too, so whole fights run there.

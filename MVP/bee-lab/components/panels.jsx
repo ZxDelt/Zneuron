@@ -331,7 +331,7 @@ export function Verdict({ results, scale, setScale }) {
   const ctl = cur.control || {};
   return (
     <>
-      <div className="sub">SuperNeuron v2 against each rival · squares delivered · {cells} tests each</div>
+      <div className="sub">Zneuron v2 against each rival · squares delivered · {cells} tests each</div>
       <div className="vs4">
         {opps.map((o) => (
           <div key={o} className="vsbox">
@@ -386,7 +386,7 @@ export function Verdict({ results, scale, setScale }) {
           <li>All bees share one arena, the same squares and spot; starts rotate between bees; who acts first rotates every step.</li>
           <li>Same fly wiring and the same start weights for every bee (no per-bee tuning), tested at ×{results.scales.join(", ×")}.</li>
           <li>Same senses, noise, rewards, babbling and the same learning rule: reward-gated STDP with a fast (250 ms) and a slow (2 s) memory, driven by reward surprise.</li>
-          <li>Only the neuron differs. v2 = new SuperNeuron, v1 = old one, LIF = textbook, ALIF = adaptive LIF (Bellec 2018/2020).</li>
+          <li>Only the neuron differs. v2 = new Zneuron, v1 = old one, LIF = textbook, ALIF = adaptive LIF (Bellec 2018/2020).</li>
           <li>Paired test inside each match (sign-flip permutation, p &lt; 0.05). v2's activity brakes were set by activity checks, not task score.</li>
         </ul>
       </div>

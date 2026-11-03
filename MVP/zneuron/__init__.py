@@ -1,4 +1,4 @@
-"""SuperNeuron MVP: Hub Neuron model built from ../neuron_spec.json."""
+"""Zneuron MVP: Hub Neuron model built from ../neuron_spec.json."""
 
 from pathlib import Path
 

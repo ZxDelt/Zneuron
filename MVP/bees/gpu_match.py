@@ -1,6 +1,6 @@
 """Many bee matches at once, entirely on the GPU: brains (all four neuron models), bodies and shared arenas.
 
-Brains run one GPU thread per neuron (superneuron/gpu_par.py, bees/gpu_bees.py). Each 20 ms body step is a
+Brains run one GPU thread per neuron (zneuron/gpu_par.py, bees/gpu_bees.py). Each 20 ms body step is a
 handful of GPU kernel launches for ALL matches together:
   sense (every bee of every world) -> run 20 ms of each brain batch -> act (every world) -> rewards per brain batch.
 Brains follow the CPU engine's rules (same averages, not spike for spike). Arenas follow arena.World's rules.
@@ -16,8 +16,8 @@ from pathlib import Path
 import numpy as np
 from numba import cuda
 
-from superneuron.gpu import THREADS, _HELPERS
-from superneuron.gpu_par import GPUParBatch
+from zneuron.gpu import THREADS, _HELPERS
+from zneuron.gpu_par import GPUParBatch
 
 from . import gpu_world as GW
 from .brains import BABBLE, BASELINE_RATE, MODELS, REWARD_GAIN, make_brain

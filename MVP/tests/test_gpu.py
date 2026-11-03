@@ -29,7 +29,7 @@ def brains(model, n=2):
 
 
 def test_one_brain_per_thread_is_exact():
-    from superneuron.gpu import GPUBatch
+    from zneuron.gpu import GPUBatch
     cpu, gpu = brains("hub1"), brains("hub1")
     batch = GPUBatch([b.net.S for b in gpu], gpu[0].net.P, 2)
     batch.run(SIM)
@@ -43,7 +43,7 @@ def test_one_brain_per_thread_is_exact():
 @pytest.mark.parametrize("model", ["hub2", "lif", "alif"])
 def test_one_thread_per_neuron_matches_cpu_rates(model):
     from bees.gpu_bees import GPUPointParBatch
-    from superneuron.gpu_par import GPUParBatch
+    from zneuron.gpu_par import GPUParBatch
     cpu, gpu = brains(model), brains(model)
     for b in cpu:
         b.run(SIM)

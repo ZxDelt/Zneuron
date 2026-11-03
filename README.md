@@ -1,4 +1,4 @@
-# SuperNeuron
+# Zneuron
 
 An experimental spiking neuron model — the **Hub neuron** — that learns while it runs, grows and prunes its own
 connections, and splits its input into mini-buckets (dendrite-like branches). Includes a fair test bench against the
@@ -11,7 +11,7 @@ two standard spiking neurons, **LIF** and **ALIF**, and a live 2D "bee lab" to w
 Four bees share one arena and must carry squares to a spot. Same fly-like wiring (84 sensors → 147 → 84 → 16 motors),
 same start weights, same reward-gated learning rule; **only the neuron model differs**.
 
-| | SuperNeuron v2 | LIF | ALIF | SuperNeuron v1 |
+| | Zneuron v2 | LIF | ALIF | Zneuron v1 |
 |---|---|---|---|---|
 | Squares delivered (20 min, avg) | **9.05** | 4.81 | 3.75 | 1.34 |
 | Spikes per square delivered | **379k** | 879k | 771k | 394k |
@@ -29,7 +29,7 @@ Honest limits:
 | `neuron_spec.html` / `neuron_spec.json` | The neuron's rules, item by item (open the HTML in a browser to read/edit). |
 | `01_model_rules.md` … `05_roadmap.md` | Design notes: rules, function map, learning and growth, biology, roadmap. |
 | `docs/` | Fix guide and run history. |
-| `MVP/superneuron/` | The engine (Numba, CPU) plus two CUDA engines (`gpu.py`, `gpu_par.py`). |
+| `MVP/zneuron/` | The engine (Numba, CPU) plus two CUDA engines (`gpu.py`, `gpu_par.py`). |
 | `MVP/bees/` | Bee lab: arena, fly wiring, LIF/ALIF, fair comparison runner, live server. |
 | `MVP/bee-lab/` | Next.js app to watch the bees and see the verdict. |
 | `MVP/web/`, `run_live.py` | 3D robot-in-a-world demo with a 1000-spot cube brain. |

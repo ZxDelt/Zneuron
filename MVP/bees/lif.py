@@ -12,7 +12,7 @@ from collections import namedtuple
 import numpy as np
 from numba import njit
 
-from superneuron.engine import rand01
+from zneuron.engine import rand01
 
 NONE = -1
 QD = 8
@@ -70,7 +70,7 @@ def make(n, sensors, motors, sign, edges, seed=1, slow_tau=0.0, slow_w=0.0, grow
 
 
 def seed_rng(S, seed):
-    from superneuron.engine import seed_rng as engine_seed
+    from zneuron.engine import seed_rng as engine_seed
     engine_seed(S, seed)                                 # same own random generator as the Hub engine (GPU-ready)
 
 

@@ -46,7 +46,7 @@ def device_engine():
     # this Numba's CUDA target mis-types the min/max builtins inside device functions: use 2-argument helpers
     src = re.sub(r"(?<![\w.])min\(", "_min(", src)
     src = re.sub(r"(?<![\w.])max\(", "_max(", src)
-    ns = {"__name__": "superneuron.engine_gpu"}
+    ns = {"__name__": "zneuron.engine_gpu"}
     exec(compile(src, "engine_gpu", "exec"), ns)
     fields = E.State._fields
     args = ", ".join(f"F{k}" for k in range(len(fields)))

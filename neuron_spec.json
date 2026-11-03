@@ -522,14 +522,14 @@
       ]
     },
     {
-      "group": "SuperNeuron v2 proposals (built, waiting for you)",
+      "group": "Zneuron v2 proposals (built, waiting for you)",
       "items": [
         {
           "id": "V1",
           "name": "Small, slow leak instead of the 20 ms dump",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Hub, pools and mini-buckets lose charge with a 50 ms time constant every tick (applied before new input arrives). Nothing is wiped at once; the 20 ms dump (R16/#5) is off in v2. Param: leak_tau_ms = 50.",
           "confirmed": false
         },
@@ -538,7 +538,7 @@
           "name": "Fire threshold 0.3",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Homeostasis threshold starts at 0.3 (was 0.5), may move between 0.15 and 0.9 so busy neurons can be calmed.",
           "confirmed": false
         },
@@ -547,7 +547,7 @@
           "name": "No 8-line limit",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Up to 64 lines per neuron (max_lines = 64, memory sized from it). A neuron counts as 'full' for neurogenesis at 6 lines.",
           "confirmed": false
         },
@@ -556,7 +556,7 @@
           "name": "Softer fatigue",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Each spike multiplies the line's energy by 0.8 (was 0.7), recovery time constant 30 ms (was 50).",
           "confirmed": false
         },
@@ -565,7 +565,7 @@
           "name": "Gentle homeostasis",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Busy neurons' inputs thin x0.998 per check (-2%/s, was -10%/s); threshold steps 0.001 per check. Tested: removing thinning completely made the brain run away (every layer ~38 Hz), so a gentle version stays.",
           "confirmed": false
         },
@@ -574,7 +574,7 @@
           "name": "Glia calm only fast neurons",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Astrocytes raise local Rfuel only for neurons above 10 Hz (was: above the 2 Hz target). Tested: 50 Hz was too late.",
           "confirmed": false
         },
@@ -583,7 +583,7 @@
           "name": "Each neuron its own target rate",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Per-neuron target (S.target). In the bee brain: Kenyon cells 1 Hz, MBONs 5 Hz, the rest 2 Hz.",
           "confirmed": false
         },
@@ -592,7 +592,7 @@
           "name": "Prune only weak lines",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "A line is no longer removed for being quiet; only lines learning made thinner than 0.1, or failed trial lines. Pruning checks a rotating 1/10 slice of the lines each time (speed).",
           "confirmed": false
         },
@@ -601,7 +601,7 @@
           "name": "Trial lines get 3 s",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "A newly grown trial line has 3 s (was 0.5 s) to reach 0.3 before it is removed.",
           "confirmed": false
         },
@@ -610,7 +610,7 @@
           "name": "Room to grow neurons",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Brains get free spots (bee: 40) so neurogenesis (#37) can actually add neurons.",
           "confirmed": false
         },
@@ -619,7 +619,7 @@
           "name": "Mini-buckets in the bucket (dendrites)",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Each neuron has 4 mini-buckets. Excitatory lines fill their mini-bucket; once it holds 0.25 it pours its charge x1.5 into the hub (dendritic spike). Inhibitory charge still goes straight to the hub.",
           "confirmed": false
         },
@@ -628,7 +628,7 @@
           "name": "Choke rule",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "A mini-bucket filled past 0.9 in one go chokes: it empties without pouring. One neuron can solve XOR (A alone fires, B alone fires, A+B together stays silent). Tested in tests/test_v2.py; LIF and ALIF cannot.",
           "confirmed": false
         },
@@ -637,7 +637,7 @@
           "name": "Smart growth",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "A new input line joins the mini-bucket holding the most charge when it is made, so inputs active together end up in the same mini-bucket.",
           "confirmed": false
         },
@@ -646,7 +646,7 @@
           "name": "Branch credit",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Timing learning (LTP) for an excitatory input only counts if its mini-bucket poured within the last 20 ms (it helped cause the spike).",
           "confirmed": false
         },
@@ -655,7 +655,7 @@
           "name": "Lock on reward",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "A line strengthened by a reward is safe from pruning for 5 minutes.",
           "confirmed": false
         },
@@ -664,7 +664,7 @@
           "name": "Grow by teamwork, as needed",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "A starving neuron takes a new line from a neuron that fired in the last 50 ms (any layer). Hebbian growth only happens while a neuron fires below 2x its target rate. Tested: without that limit growth fed itself and ran away.",
           "confirmed": false
         },
@@ -673,7 +673,7 @@
           "name": "Two-speed learning memory (shared rule)",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Eligibility has a fast memory (250 ms) and a slow one (2 s); a reward uses both. Given to every bee in the test.",
           "confirmed": false
         },
@@ -682,7 +682,7 @@
           "name": "Reward surprise (shared rule)",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "Learning uses reward minus the expected reward (running average), x4. Given to every bee in the test.",
           "confirmed": false
         },
@@ -691,7 +691,7 @@
           "name": "Faster rewards",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "A reward only visits lines that have eligibility (a kept list), not every line in the brain. Same result, less work.",
           "confirmed": false
         },
@@ -700,7 +700,7 @@
           "name": "Reward-guided growth (structural learning)",
           "status": "missing",
           "original_status": "missing",
-          "doc_note": "Built in SuperNeuron v2 (params.v2). Check and Submit, or edit.",
+          "doc_note": "Built in Zneuron v2 (params.v2). Check and Submit, or edit.",
           "todo": "When a reward arrives (surprise x gain >= 0.2), up to 4 neurons that fired in the last 300 ms each grow a trial line (start 0.2) from a neuron that fired 2-20 ms before them (their likely cause). Trial lines must reach 0.3 within 3 s or they are removed. Research 2026-11-02: v2 went from 2.9 to 11.1 squares and became the only bee that learns to steer; ahead of LIF and ALIF in all 18 tests. ALIF given the same rule only went 3.2 -> 3.8.",
           "confirmed": false
         }

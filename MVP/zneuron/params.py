@@ -106,7 +106,7 @@ class Params:
 
 
 def v2(**over):
-    """SuperNeuron v2: the fix guide's patches and the new features, as one parameter set.
+    """Zneuron v2: the fix guide's patches and the new features, as one parameter set.
 
     Reward-guided growth (research 2026-11-02, bees/research.py): v2 delivered 2.9 -> 11.1 squares on basic and
     turned from chance steering to learning; 4 lines per reward beat 8; protecting rewarded lines from thinning and

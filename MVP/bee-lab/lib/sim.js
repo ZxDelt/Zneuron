@@ -5,7 +5,7 @@ export const SIM = process.env.NEXT_PUBLIC_SIM || "http://127.0.0.1:8766";
 export const BEES = ["hub2", "hub1", "lif", "alif"];
 export const COLOR = { hub2: "#ffe14d", hub1: "#b388ff", lif: "#ff6fd8", alif: "#ff9f43" };
 export const RGB = { hub2: "255, 225, 77", hub1: "179, 136, 255", lif: "255, 111, 216", alif: "255, 159, 67" };
-export const NAME = { hub2: "SuperNeuron v2", hub1: "SuperNeuron v1", lif: "LIF (textbook)", alif: "ALIF (adaptive)" };
+export const NAME = { hub2: "Zneuron v2", hub1: "Zneuron v1", lif: "LIF (textbook)", alif: "ALIF (adaptive)" };
 export const SHORT = { hub2: "v2", hub1: "v1", lif: "LIF", alif: "ALIF" };
 export const FOCUS = "hub2";
 
